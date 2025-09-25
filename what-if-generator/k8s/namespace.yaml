@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: what-if-generator
+  labels:
+    name: what-if-generator
+    environment: development
+    version: "1.0.0"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: what-if-config
+  namespace: what-if-generator
+data:
+  # Common configuration
+  NODE_ENV: "development"
+  LOG_LEVEL: "info"
+  
+  # JWT Configuration
+  JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
+  JWT_EXPIRES_IN: "24h"
+  JWT_REFRESH_EXPIRES_IN: "7d"
+  
+  # Frontend URL
+  FRONTEND_URL: "http://localhost:3005"
+  
+  # Database URLs
+  POSTGRES_HOST: "postgres-service"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "what_if_users"
+  POSTGRES_USER: "postgres"
+  
+  MONGODB_HOST: "mongodb-service"
+  MONGODB_PORT: "27017"
+  MONGODB_USER: "admin"
+  
+  # Redis URL
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  
+  # Service URLs (internal)
+  USER_SERVICE_URL: "http://user-service:3001"
+  GENERATION_SERVICE_URL: "http://generation-service:3002"
+  HISTORY_SERVICE_URL: "http://history-service:3003"
+  SHARING_SERVICE_URL: "http://sharing-service:3004"
+  
+  # Rate limiting
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "1000"
+  
+  # Features
+  ENABLE_ANALYTICS: "true"
+  ENABLE_CACHE: "true"
+  ENABLE_API_DOCS: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: what-if-secrets
+  namespace: what-if-generator
+type: Opaque
+data:
+  # Base64 encoded passwords (change in production!)
+  postgres-password: cG9zdGdyZXMxMjM=  # postgres123
+  mongodb-password: YWRtaW4xMjM=        # admin123
+  redis-password: ""                    # empty for no password
+  
+  # API Keys (base64 encoded)
+  gemini-api-key: eW91ci1nZW1pbmktYXBpLWtleS1oZXJl  # your-gemini-api-key-here
+  
+  # Email configuration (base64 encoded)
+  email-user: eW91ci1lbWFpbEBnbWFpbC5jb20=         # your-email@gmail.com
+  email-password: eW91ci1hcHAtcGFzc3dvcmQ=         # your-app-password

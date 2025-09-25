@@ -1,33 +1,53 @@
 {
   "name": "what-if-generator",
   "version": "1.0.0",
-  "description": "What If Generator - AI-powered scenario creation platform",
+  "description": "AI-powered scenario generator - Cỗ Máy Nếu Như",
+  "main": "index.js",
   "scripts": {
-    "dev:db": "docker-compose -f docker-compose.dev.yml up -d",
-    "dev:stop": "docker-compose -f docker-compose.dev.yml down",
-    "build:all": "npm run build:api-gateway && npm run build:user-service && npm run build:generation-service && npm run build:history-service && npm run build:frontend",
-    "build:api-gateway": "cd backend/api-gateway && npm run build",
-    "build:user-service": "cd backend/user-service && npm run build",
-    "build:generation-service": "cd backend/generation-service && npm run build",
-    "build:history-service": "cd backend/history-service && npm run build",
-    "build:frontend": "cd frontend && npm run build",
-    "dev:api-gateway": "cd backend/api-gateway && npm run dev",
-    "dev:user-service": "cd backend/user-service && npm run dev",
-    "dev:generation-service": "cd backend/generation-service && npm run dev",
-    "dev:history-service": "cd backend/history-service && npm run dev",
+    "install:all": "npm run install:gateway && npm run install:services && npm run install:frontend",
+    "install:gateway": "cd api-gateway && npm install",
+    "install:services": "cd services/user-service && npm install && cd ../generation-service && npm install && cd ../history-service && npm install && cd ../sharing-service && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "dev": "concurrently \"npm run dev:gateway\" \"npm run dev:user\" \"npm run dev:generation\" \"npm run dev:history\" \"npm run dev:sharing\" \"npm run dev:frontend\"",
+    "dev:gateway": "cd api-gateway && npm run dev",
+    "dev:user": "cd services/user-service && npm run dev",
+    "dev:generation": "cd services/generation-service && npm run dev",
+    "dev:history": "cd services/history-service && npm run dev",
+    "dev:sharing": "cd services/sharing-service && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "install:all": "npm run install:api-gateway && npm run install:user-service && npm run install:generation-service && npm run install:history-service && npm run install:frontend",
-    "install:api-gateway": "cd backend/api-gateway && npm ci",
-    "install:user-service": "cd backend/user-service && npm ci",
-    "install:generation-service": "cd backend/generation-service && npm ci",
-    "install:history-service": "cd backend/history-service && npm ci",
-    "install:frontend": "cd frontend && npm ci",
-    "docker:build": "docker-compose build",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "build:docker": "docker-compose build",
+    "start:docker": "docker-compose up -d",
+    "stop:docker": "docker-compose down",
+    "deploy:k8s": "kubectl apply -f k8s/",
+    "undeploy:k8s": "kubectl delete -f k8s/",
+    "test": "npm run test:services && npm run test:frontend",
+    "test:services": "cd services/user-service && npm test && cd ../generation-service && npm test && cd ../history-service && npm test && cd ../sharing-service && npm test",
+    "test:frontend": "cd frontend && npm test"
   },
-  "keywords": ["ai", "scenarios", "generator", "microservices", "nextjs"],
+  "keywords": [
+    "ai",
+    "scenario-generator",
+    "microservices",
+    "react",
+    "node.js",
+    "what-if"
+  ],
   "author": "What If Generator Team",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "docker-compose": "^0.24.6"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/what-if-generator/what-if-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/what-if-generator/what-if-generator/issues"
+  },
+  "homepage": "https://whatifgenerator.com"
 }
