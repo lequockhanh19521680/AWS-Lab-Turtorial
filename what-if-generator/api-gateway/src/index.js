@@ -180,7 +180,9 @@ app.get('/', (req, res) => {
         generate: '/api/generate',
         scenarios: '/api/scenarios/*',
         sharing: '/api/sharing/*',
-        reporting: '/api/reporting/*'
+        reporting: '/api/reporting/*',
+        video: '/api/video/*',
+        tts: '/api/tts/*'
       },
       public: {
         shared: '/shared/*',
