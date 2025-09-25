@@ -13,6 +13,11 @@ const { connectRedis } = require('./config/redis');
 // Import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
+const oauthRoutes = require('./routes/oauth');
+const profileRoutes = require('./routes/profile');
+
+// Import passport configuration
+const passport = require('./config/passport');
 
 // Import middleware
 const { generalLimiter } = require('./middleware/rateLimiter');
@@ -62,6 +67,21 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Session configuration for OAuth
+app.use(session({
+  secret: process.env.JWT_SECRET || 'your-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Apply general rate limiting
 app.use(generalLimiter);
 
@@ -83,7 +103,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/api/auth', oauthRoutes);
 app.use('/users', userRoutes);
+app.use('/profiles', profileRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

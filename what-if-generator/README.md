@@ -1,127 +1,403 @@
-# What If Generator (Cỗ Máy "Nếu Như")
+# What If Generator - Social Media Platform
 
-## Giới thiệu
-Hệ thống "What If Generator" là một ứng dụng web cho phép người dùng tạo ra các viễn cảnh "Nếu như..." thú vị bằng cách sử dụng trí tuệ nhân tạo. Người dùng chỉ cần nhập một chủ đề và hệ thống sẽ tạo ra một câu chuyện hoặc viễn cảnh hấp dẫn.
+## 🚀 Tổng Quan
 
-## Kiến trúc
-Hệ thống được xây dựng theo kiến trúc Microservices với các thành phần chính:
+What If Generator là một nền tảng social media cho phép người dùng tạo và chia sẻ các viễn cảnh "Nếu như..." thú vị sử dụng AI, với hệ thống thành tựu, tương tác xã hội và đăng nhập OAuth.
 
-### Backend Services
-- **API Gateway**: Điểm vào duy nhất cho tất cả requests
-- **User Service**: Quản lý người dùng và xác thực
-- **Generation Service**: Xử lý tạo viễn cảnh với LLM
-- **History Service**: Lưu trữ và quản lý lịch sử viễn cảnh
-- **Sharing Service**: Xử lý chia sẻ và báo cáo
+## 🏗️ Kiến Trúc
 
-### Frontend
-- **React Application**: Giao diện người dùng responsive
-
-### Databases
-- **PostgreSQL**: Lưu trữ thông tin người dùng
-- **MongoDB**: Lưu trữ lịch sử viễn cảnh và dữ liệu NoSQL
-
-## Công nghệ sử dụng
-- **Backend**: Node.js với Express.js
-- **Frontend**: React với TypeScript
-- **Databases**: PostgreSQL, MongoDB
-- **Containerization**: Docker
-- **Orchestration**: Kubernetes
-- **Authentication**: JWT
-- **AI Integration**: Google Gemini API
-
-## Cấu trúc thư mục
+### Microservices Architecture
 ```
-what-if-generator/
-├── api-gateway/          # API Gateway service
-├── services/
-│   ├── user-service/     # User management service
-│   ├── generation-service/ # AI scenario generation
-│   ├── history-service/  # History management
-│   └── sharing-service/  # Sharing and reporting
-├── frontend/             # React frontend application
-├── docker/               # Docker configurations
-├── k8s/                  # Kubernetes configurations
-├── docs/                 # Documentation
-└── scripts/              # Deployment and utility scripts
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │  API Gateway    │    │   Databases     │
+│   (React)       │◄──►│   (Port 3000)   │◄──►│ PostgreSQL +    │
+│   Port 3005     │    │                 │    │ MongoDB + Redis │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │
+                    ┌───────────┼───────────┐
+                    │           │           │
+            ┌───────▼────┐ ┌────▼────┐ ┌───▼────┐
+            │ User Svc   │ │Gen Svc  │ │Social  │
+            │ (3001)     │ │(3002)   │ │(3006)  │
+            │ OAuth      │ │AI Gen   │ │Posts   │
+            └────────────┘ └─────────┘ └────────┘
+                    │           │           │
+            ┌───────▼────┐ ┌────▼────┐ ┌───▼────┐
+            │History Svc │ │Sharing  │ │Video   │
+            │(3003)      │ │(3004)   │ │(3005)  │
+            │Scenarios   │ │Reports  │ │Gen     │
+            └────────────┘ └─────────┘ └────────┘
 ```
 
-## Use Cases Hỗ trợ
-1. **UC-001**: Tạo viễn cảnh mới
-2. **UC-002**: Đăng ký tài khoản
-3. **UC-003**: Đăng nhập
-4. **UC-004**: Xem lịch sử viễn cảnh
-5. **UC-005**: Quên mật khẩu (Password Reset)
-6. **UC-006**: Chia sẻ viễn cảnh
-7. **UC-007**: Gắn thẻ (Tag) cho viễn cảnh
-8. **UC-008**: Tìm kiếm viễn cảnh trong lịch sử
-9. **UC-009**: Xóa viễn cảnh khỏi lịch sử
-10. **UC-010**: Xem viễn cảnh ngẫu nhiên
-11. **UC-011**: Báo cáo viễn cảnh không phù hợp
-12. **UC-012**: Sao chép nội dung viễn cảnh
-13. **UC-013**: Đổi mật khẩu
-14. **UC-014**: Đổi email
-15. **UC-015**: Xóa tài khoản
-16. **UC-016**: Thay đổi cài đặt giao diện
+### Services Overview
+| Service | Port | Database | Chức Năng |
+|---------|------|----------|-----------|
+| **API Gateway** | 3000 | Redis | Routing, Auth, Rate Limiting |
+| **User Service** | 3001 | PostgreSQL | User Management, OAuth |
+| **Generation Service** | 3002 | Redis | AI Scenario Generation |
+| **History Service** | 3003 | MongoDB | Scenario History |
+| **Sharing Service** | 3004 | MongoDB | Sharing & Reports |
+| **Video Service** | 3005 | Redis | Video Generation |
+| **Social Service** | 3006 | MongoDB | Social Media Features |
+| **Frontend** | 3005 | - | React UI |
 
-## Yêu cầu phi chức năng
-- **Performance**: Tạo viễn cảnh < 5s, load trang < 2s
-- **Scalability**: 1,000 requests/minute
-- **Availability**: 99.5% uptime
-- **Security**: bcrypt password hashing, JWT authentication
-- **Usability**: Responsive design, đa ngôn ngữ
+## ✨ Tính Năng Chính
 
-## Cài đặt và Chạy
+### 🎯 AI Scenario Generation
+- Tạo viễn cảnh "Nếu như..." bằng AI
+- Nhiều loại prompt (fantasy, historical, scientific)
+- Hỗ trợ multiple AI providers (Gemini, OpenAI, Anthropic)
+
+### 🏆 Achievement System
+- **Categories**: Creation, Interaction, Social, Milestone, Special
+- **Rarities**: Common → Uncommon → Rare → Epic → Legendary
+- **Auto-tracking**: Tự động theo dõi progress
+- **Leaderboards**: Bảng xếp hạng toàn cầu
+
+### 📱 Social Media Features
+- **Posts**: Chia sẻ thành tựu, viễn cảnh, milestones
+- **Comments**: Bình luận với hình ảnh
+- **Likes/Shares**: Tương tác cơ bản
+- **Feed**: Timeline cá nhân và công khai
+- **User Profiles**: Stats, achievements, activity
+
+### 🔐 OAuth Integration
+- **Google OAuth**: Đăng nhập bằng Google
+- **Facebook OAuth**: Đăng nhập bằng Facebook
+- **Account Linking**: Liên kết nhiều tài khoản
+
+### 🎥 Video Generation
+- Tạo video từ viễn cảnh
+- Text-to-Speech
+- Multiple video providers
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- Docker và Docker Compose
-- Kubernetes (minikube hoặc cloud provider)
-- PostgreSQL
-- MongoDB
+- Docker & Docker Compose
+- Node.js 18+ (for development)
 
-### Development
+### 1. Clone & Setup
 ```bash
-# Clone repository
 git clone <repository-url>
 cd what-if-generator
 
-# Install dependencies for all services
-npm run install:all
-
-# Start development environment
-npm run dev
-
-# Start with Docker Compose
-docker-compose up -d
+# Copy environment files
+cp services/user-service/.env.example services/user-service/.env
+cp services/generation-service/.env.example services/generation-service/.env
+cp services/social-service/.env.example services/social-service/.env
 ```
 
-### Production
+### 2. Configure API Keys
 ```bash
-# Build Docker images
-npm run build:docker
+# services/generation-service/.env
+GEMINI_API_KEY=your-gemini-api-key
 
+# services/user-service/.env
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+FACEBOOK_APP_ID=your-facebook-app-id
+FACEBOOK_APP_SECRET=your-facebook-app-secret
+
+# services/social-service/.env
+MONGODB_URI=mongodb://admin:admin123@mongodb:27017/what_if_social?authSource=admin
+```
+
+### 3. Start Services
+```bash
+# Start all services
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f social-service
+```
+
+### 4. Access URLs
+- **Frontend**: http://localhost:3005
+- **API Gateway**: http://localhost:3000
+- **API Docs**: http://localhost:3000/api-docs
+- **Health Check**: http://localhost:3000/health
+
+## 📚 API Documentation
+
+### Social Media Endpoints
+```bash
+# Posts
+POST   /api/social/posts              # Tạo post mới
+GET    /api/social/posts/feed         # Lấy feed công khai
+GET    /api/social/posts/user/:userId # Lấy posts của user
+POST   /api/social/posts/:postId/like # Like/unlike post
+
+# Comments
+POST   /api/social/comments           # Tạo comment mới
+GET    /api/social/comments/post/:postId # Lấy comments của post
+
+# Achievements
+GET    /api/achievements              # Lấy danh sách achievements
+GET    /api/achievements/user/:userId # Lấy achievements của user
+GET    /api/achievements/leaderboard/top # Bảng xếp hạng
+
+# OAuth
+GET    /api/auth/google               # Google OAuth login
+GET    /api/auth/facebook             # Facebook OAuth login
+```
+
+### Example API Calls
+```javascript
+// Tạo post mới
+const response = await fetch('/api/social/posts', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    title: 'Tôi đã tạo viễn cảnh đầu tiên!',
+    content: 'Viễn cảnh về thế giới không có Internet...',
+    type: 'scenario',
+    tags: ['viễn cảnh', 'công nghệ'],
+    visibility: 'public'
+  })
+});
+
+// Like một post
+await fetch(`/api/social/posts/${postId}/like`, {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+```
+
+## 🗄️ Database Schema
+
+### Social Media Collections (MongoDB)
+```javascript
+// Achievements
+{
+  achievementId: "first_scenario",
+  name: "First Steps",
+  description: "Tạo viễn cảnh đầu tiên của bạn",
+  category: "creation",
+  icon: "🌟",
+  points: 10,
+  rarity: "common"
+}
+
+// Posts
+{
+  postId: "post_123",
+  userId: "user_456",
+  title: "Tôi đã tạo viễn cảnh đầu tiên!",
+  content: "Viễn cảnh về thế giới không có Internet...",
+  type: "scenario",
+  likes: { count: 5, users: [...] },
+  shares: { count: 2, users: [...] }
+}
+
+// User Profiles
+{
+  userId: "user_456",
+  username: "john_doe",
+  displayName: "John Doe",
+  stats: {
+    followers: 100,
+    following: 50,
+    reputation: 250,
+    level: 5,
+    experience: 1250
+  },
+  badges: [...]
+}
+```
+
+### User Extensions (PostgreSQL)
+```sql
+-- OAuth fields
+google_id VARCHAR UNIQUE,
+facebook_id VARCHAR UNIQUE,
+provider VARCHAR DEFAULT 'local',
+
+-- Social fields
+username VARCHAR(30) UNIQUE,
+display_name VARCHAR(50),
+bio TEXT,
+avatar VARCHAR,
+
+-- Stats
+followers INTEGER DEFAULT 0,
+reputation INTEGER DEFAULT 0,
+level INTEGER DEFAULT 1,
+experience INTEGER DEFAULT 0
+```
+
+## 🔧 Development
+
+### Project Structure
+```
+what-if-generator/
+├── api-gateway/              # API Gateway service
+├── services/
+│   ├── user-service/         # User management + OAuth
+│   ├── generation-service/   # AI scenario generation
+│   ├── history-service/      # Scenario history
+│   ├── sharing-service/      # Sharing & reports
+│   ├── video-service/        # Video generation
+│   └── social-service/       # Social media features
+├── frontend/                 # React frontend
+├── docker/                   # Docker configurations
+├── docs/                     # Documentation
+└── docker-compose.yml        # Development environment
+```
+
+### Adding New Features
+
+#### 1. Thêm Achievement Mới
+```javascript
+// Trong social service
+const achievement = new Achievement({
+  achievementId: 'new_achievement',
+  name: 'New Achievement',
+  description: 'Description here',
+  category: 'creation',
+  points: 50,
+  rarity: 'rare'
+});
+```
+
+#### 2. Thêm API Endpoint Mới
+```javascript
+// Trong social service routes
+router.get('/api/new-endpoint', authMiddleware, async (req, res) => {
+  // Implementation
+});
+
+// Cập nhật API Gateway routing
+'/api/new-endpoint': { service: 'social', target: '/api/new-endpoint' }
+```
+
+### Testing
+```bash
+# Unit tests
+npm test
+
+# Integration tests
+npm run test:integration
+
+# Health checks
+curl http://localhost:3000/health
+curl http://localhost:3006/health
+```
+
+## 📊 Monitoring
+
+### Health Checks
+```bash
+# All services
+curl http://localhost:3000/health
+
+# Individual services
+curl http://localhost:3001/health  # User Service
+curl http://localhost:3006/health  # Social Service
+```
+
+### Logs
+```bash
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f social-service
+```
+
+## 🚀 Production Deployment
+
+### Environment Variables
+```env
+# Production settings
+NODE_ENV=production
+JWT_SECRET=your-very-long-secure-secret
+MONGODB_URI=mongodb://prod-user:secure-pass@mongodb:27017/what_if_social?authSource=admin
+
+# OAuth (Production)
+GOOGLE_CLIENT_ID=your-prod-google-client-id
+GOOGLE_CLIENT_SECRET=your-prod-google-client-secret
+GOOGLE_CALLBACK_URL=https://yourdomain.com/api/auth/google/callback
+
+FACEBOOK_APP_ID=your-prod-facebook-app-id
+FACEBOOK_APP_SECRET=your-prod-facebook-app-secret
+FACEBOOK_CALLBACK_URL=https://yourdomain.com/api/auth/facebook/callback
+```
+
+### Kubernetes Deployment
+```bash
 # Deploy to Kubernetes
 kubectl apply -f k8s/
+
+# Check deployment
+kubectl get pods -n what-if-generator
+kubectl get services -n what-if-generator
 ```
 
-## API Documentation
-API documentation được tạo tự động với Swagger/OpenAPI và có thể truy cập tại:
-- Development: http://localhost:3000/api-docs
-- Production: https://your-domain.com/api-docs
+## 🛠️ Troubleshooting
 
-## Environment Variables
-Xem file `.env.example` trong mỗi service để biết các biến môi trường cần thiết.
+### Common Issues
 
-## Contributing
+1. **Services không start được**
+   ```bash
+   docker-compose logs [service-name]
+   ```
+
+2. **Database connection failed**
+   ```bash
+   docker-compose ps
+   docker exec -it what-if-mongodb mongosh
+   ```
+
+3. **OAuth login fails**
+   - Check OAuth app configuration
+   - Verify callback URLs
+   - Check environment variables
+
+### Debug Commands
+```bash
+# Enter container
+docker exec -it [container-name] /bin/sh
+
+# Check database
+docker exec -it what-if-mongodb mongosh
+docker exec -it what-if-postgres psql -U postgres -d what_if_users
+
+# Check Redis
+docker exec -it what-if-redis redis-cli ping
+```
+
+## 📖 Documentation
+
+- **Social Media Guide**: [SOCIAL_MEDIA_GUIDE.md](./SOCIAL_MEDIA_GUIDE.md)
+- **API Documentation**: http://localhost:3000/api-docs
+- **Development Guide**: [AI_DEVELOPMENT_GUIDE.md](./AI_DEVELOPMENT_GUIDE.md)
+- **Deployment Guide**: [what-if-generator/docs/DEPLOYMENT_GUIDE.md](./what-if-generator/docs/DEPLOYMENT_GUIDE.md)
+
+## 🤝 Contributing
+
 1. Fork the repository
 2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
-## License
+## 📄 License
+
 MIT License
 
-## Contact
-- Email: support@whatifgenerator.com
-- Website: https://whatifgenerator.com
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/your-org/what-if-generator/issues)
+- **Documentation**: [GitHub Wiki](https://github.com/your-org/what-if-generator/wiki)
+- **Email**: support@whatifgenerator.com
+
+---
+
+**What If Generator** - Tạo ra những viễn cảnh thú vị và kết nối cộng đồng! 🌟

@@ -76,6 +76,109 @@ const User = sequelize.define('User', {
       language: 'vi',
       notifications: true
     }
+  },
+  // OAuth fields
+  googleId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true
+  },
+  facebookId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true
+  },
+  provider: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'local' // 'local', 'google', 'facebook'
+  },
+  avatar: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  // Social media fields
+  username: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+    validate: {
+      len: [3, 30],
+      is: /^[a-zA-Z0-9_]+$/
+    }
+  },
+  displayName: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [1, 50]
+    }
+  },
+  bio: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    validate: {
+      len: [0, 500]
+    }
+  },
+  location: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [0, 100]
+    }
+  },
+  website: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      isUrl: true
+    }
+  },
+  // Social stats
+  followers: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    validate: {
+      min: 0
+    }
+  },
+  following: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    validate: {
+      min: 0
+    }
+  },
+  reputation: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    validate: {
+      min: 0
+    }
+  },
+  level: {
+    type: DataTypes.INTEGER,
+    defaultValue: 1,
+    validate: {
+      min: 1,
+      max: 100
+    }
+  },
+  experience: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    validate: {
+      min: 0
+    }
+  },
+  isVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  isPublic: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
 }, {
   tableName: 'users',
@@ -85,10 +188,28 @@ const User = sequelize.define('User', {
       fields: ['email']
     },
     {
+      unique: true,
+      fields: ['username']
+    },
+    {
+      unique: true,
+      fields: ['google_id']
+    },
+    {
+      unique: true,
+      fields: ['facebook_id']
+    },
+    {
       fields: ['email_verification_token']
     },
     {
       fields: ['password_reset_token']
+    },
+    {
+      fields: ['reputation']
+    },
+    {
+      fields: ['level']
     }
   ]
 });
@@ -143,12 +264,94 @@ User.prototype.resetLoginAttempts = async function() {
   });
 };
 
+// Static methods
+User.findByUsername = function(username) {
+  return this.findOne({ where: { username } });
+};
+
+User.findByGoogleId = function(googleId) {
+  return this.findOne({ where: { googleId } });
+};
+
+User.findByFacebookId = function(facebookId) {
+  return this.findOne({ where: { facebookId } });
+};
+
+User.findTopUsers = function(limit = 50) {
+  return this.findAll({
+    where: { isPublic: true },
+    order: [['reputation', 'DESC']],
+    limit
+  });
+};
+
+User.findByProvider = function(provider) {
+  return this.findAll({ where: { provider } });
+};
+
+// Instance methods
 User.prototype.toJSON = function() {
   const values = Object.assign({}, this.get());
   delete values.password;
   delete values.passwordResetToken;
   delete values.emailVerificationToken;
   return values;
+};
+
+User.prototype.toPublicJSON = function() {
+  return {
+    id: this.id,
+    username: this.username,
+    displayName: this.displayName,
+    bio: this.bio,
+    avatar: this.avatar,
+    location: this.location,
+    website: this.website,
+    followers: this.followers,
+    following: this.following,
+    reputation: this.reputation,
+    level: this.level,
+    isVerified: this.isVerified,
+    isPublic: this.isPublic,
+    createdAt: this.createdAt
+  };
+};
+
+User.prototype.incrementExperience = async function(points) {
+  this.experience += points;
+  
+  // Update level based on experience
+  const newLevel = Math.floor(this.experience / 1000) + 1;
+  if (newLevel > this.level && newLevel <= 100) {
+    this.level = newLevel;
+  }
+  
+  return this.save();
+};
+
+User.prototype.incrementReputation = async function(points) {
+  this.reputation += points;
+  return this.save();
+};
+
+User.prototype.updateSocialStats = async function(stats) {
+  const allowedStats = ['followers', 'following', 'reputation', 'experience'];
+  
+  for (const [key, value] of Object.entries(stats)) {
+    if (allowedStats.includes(key) && typeof value === 'number') {
+      this[key] += value;
+    }
+  }
+  
+  // Update level based on experience
+  if (stats.experience) {
+    const newLevel = Math.floor(this.experience / 1000) + 1;
+    if (newLevel > this.level && newLevel <= 100) {
+      this.level = newLevel;
+    }
+  }
+  
+  return this.save();
 };
 
 module.exports = User;
