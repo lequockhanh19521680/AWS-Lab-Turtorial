@@ -54,6 +54,18 @@ const services = {
       { path: '/reporting', target: '/reporting' },
       { path: '/shared', target: '/sharing/shared' }
     ]
+  },
+  
+  video: {
+    name: 'Video Service',
+    url: process.env.VIDEO_SERVICE_URL || 'http://localhost:3005',
+    healthPath: '/health',
+    timeout: 300000, // 5 minutes for video generation
+    retries: 2,
+    routes: [
+      { path: '/video', target: '/video' },
+      { path: '/tts', target: '/tts' }
+    ]
   }
 };
 
@@ -147,10 +159,28 @@ const routeMap = {
   '/api/report': { service: 'sharing', target: '/reporting/report' },
   '/api/reporting/options': { service: 'sharing', target: '/reporting/options' },
   
+  // Video generation routes
+  '/api/video/generate': { service: 'video', target: '/video/generate' },
+  '/api/video/generate-video-only': { service: 'video', target: '/video/generate-video-only' },
+  '/api/video/status': { service: 'video', target: '/video/status' },
+  '/api/video/download': { service: 'video', target: '/video/download' },
+  '/api/video/providers': { service: 'video', target: '/video/providers' },
+  
+  // TTS routes
+  '/api/tts/generate': { service: 'video', target: '/tts/generate' },
+  '/api/tts/generate-scenario': { service: 'video', target: '/tts/generate-scenario' },
+  '/api/tts/generate-ssml': { service: 'video', target: '/tts/generate-ssml' },
+  '/api/tts/voices': { service: 'video', target: '/tts/voices' },
+  '/api/tts/download': { service: 'video', target: '/tts/download' },
+  '/api/tts/health': { service: 'video', target: '/tts/health' },
+  '/api/tts/estimate-duration': { service: 'video', target: '/tts/estimate-duration' },
+  
   // Admin routes
   '/api/admin/users': { service: 'user', target: '/users' },
   '/api/admin/reports': { service: 'sharing', target: '/reporting/pending' },
-  '/api/admin/stats': { service: 'sharing', target: '/reporting/stats' }
+  '/api/admin/stats': { service: 'sharing', target: '/reporting/stats' },
+  '/api/admin/video-cleanup': { service: 'video', target: '/video/cleanup' },
+  '/api/admin/tts-cleanup': { service: 'video', target: '/tts/cleanup' }
 };
 
 /**
