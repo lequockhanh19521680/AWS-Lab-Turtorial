@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
-require('dotenv').config();
+const { config } = require('../../../shared/config/env');
 
 // Import configurations
 const { connectRedis } = require('./config/redis');
@@ -18,7 +18,7 @@ const storyHubRoutes = require('./routes/storyHub');
 const { generalLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = config.GENERATION_SERVICE_PORT;
 
 // Swagger configuration
 const swaggerOptions = {
@@ -55,8 +55,8 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3005',
-  credentials: true
+  origin: config.FRONTEND_URL,
+  credentials: config.CORS_CREDENTIALS
 }));
 
 // Custom morgan format for better logging
@@ -82,7 +82,7 @@ app.get('/health', (req, res) => {
     message: 'Generation Service is healthy',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-    provider: process.env.AI_PROVIDER || 'gemini'
+    provider: config.AI_PROVIDER
   });
 });
 
@@ -103,7 +103,7 @@ app.get('/', (req, res) => {
     success: true,
     message: 'What If Generator - Generation Service',
     version: '1.0.0',
-    aiProvider: process.env.AI_PROVIDER || 'gemini',
+    aiProvider: config.AI_PROVIDER,
     endpoints: {
       health: '/health',
       documentation: '/api-docs',
@@ -137,7 +137,7 @@ app.use((error, req, res, next) => {
   });
   
   // Don't leak error details in production
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = config.NODE_ENV === 'development';
   
   res.status(error.status || 500).json({
     success: false,
@@ -182,7 +182,7 @@ const startServer = async () => {
       logger.info(`🚀 Generation Service running on port ${PORT}`);
       logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
       logger.info(`🏥 Health Check: http://localhost:${PORT}/health`);
-      logger.info(`🤖 AI Provider: ${process.env.AI_PROVIDER || 'gemini'}`);
+      logger.info(`🤖 AI Provider: ${config.AI_PROVIDER}`);
     });
     
     // Handle graceful shutdown

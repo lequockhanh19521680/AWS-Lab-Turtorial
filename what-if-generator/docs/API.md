@@ -2,175 +2,247 @@
 
 ## Base URL
 
-All API endpoints are accessed through the API Gateway at: `http://localhost:3001`
+- **Development**: `http://localhost:3000`
+- **Production**: `https://api.whatifgenerator.com`
 
 ## Authentication
 
-Most endpoints require authentication via JWT token in the Authorization header:
+All protected endpoints require JWT token in Authorization header:
 
-```
-Authorization: Bearer <your-jwt-token>
+```bash
+Authorization: Bearer <jwt-token>
 ```
 
 ## Endpoints
 
-### Authentication (`/auth`)
+### Health Check
+```http
+GET /health
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "API Gateway is healthy",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "version": "1.0.0"
+}
+```
+
+### User Management
 
 #### Register
 ```http
-POST /auth/register
-Content-Type: application/json
+POST /api/auth/register
+```
 
+**Request:**
+```json
 {
   "email": "user@example.com",
-  "password": "password123"
+  "password": "password123",
+  "name": "John Doe"
 }
 ```
 
 **Response:**
 ```json
 {
-  "message": "Đăng ký thành công",
-  "token": "jwt-token-here",
-  "user": {
-    "id": 1,
-    "email": "user@example.com"
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "user": {
+      "id": "user123",
+      "email": "user@example.com",
+      "name": "John Doe"
+    },
+    "token": "jwt-token"
   }
 }
 ```
 
 #### Login
 ```http
-POST /auth/login
-Content-Type: application/json
+POST /api/auth/login
+```
 
+**Request:**
+```json
 {
   "email": "user@example.com",
   "password": "password123"
 }
 ```
 
-**Response:**
-```json
-{
-  "message": "Đăng nhập thành công",
-  "token": "jwt-token-here",
-  "user": {
-    "id": 1,
-    "email": "user@example.com"
-  }
-}
-```
-
-#### Get Current User
-```http
-GET /auth/me
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "created_at": "2025-09-25T00:00:00.000Z"
-  }
-}
-```
-
-### Scenario Generation (`/scenarios/generate`)
+### Scenario Generation
 
 #### Generate Scenario
 ```http
-POST /scenarios/generate
-Content-Type: application/json
-Authorization: Bearer <token> (optional)
-
-{
-  "topic": "Nếu như Trái Đất hình vuông"
-}
+POST /api/generate
 ```
 
-**Response:**
+**Request:**
 ```json
 {
-  "topic": "Nếu như Trái Đất hình vuông",
-  "content": "Nếu như Trái Đất hình vuông, cuộc sống sẽ...",
-  "model": "gemini-pro",
-  "timestamp": "2025-09-25T00:00:00.000Z"
-}
-```
-
-### History Management (`/scenarios`)
-
-#### Get History
-```http
-GET /scenarios/history?page=1&limit=20
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "scenarios": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "topic": "Nếu như Trái Đất hình vuông",
-      "content": "Viễn cảnh content here...",
-      "created_at": "2025-09-25T00:00:00.000Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 45,
-    "totalPages": 3
+  "topic": "What if humans could fly?",
+  "options": {
+    "promptType": "fantasy",
+    "length": "medium"
   }
 }
 ```
 
-#### Get Specific Scenario
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "scenario": {
+      "id": "scenario123",
+      "topic": "What if humans could fly?",
+      "content": "Generated scenario content...",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  }
+}
+```
+
+#### Get Random Scenario
 ```http
-GET /scenarios/:id
-Authorization: Bearer <token>
+GET /api/random
+```
+
+### History Management
+
+#### Get User Scenarios
+```http
+GET /api/history?page=1&limit=20
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "scenarios": [...],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 100,
+      "pages": 5
+    }
+  }
+}
 ```
 
 #### Delete Scenario
 ```http
-DELETE /scenarios/:id
-Authorization: Bearer <token>
+DELETE /api/history/:id
+```
+
+### Sharing
+
+#### Share Scenario
+```http
+POST /api/share
+```
+
+**Request:**
+```json
+{
+  "scenarioId": "scenario123",
+  "isPublic": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "shareUrl": "https://whatifgenerator.com/share/abc123",
+    "qrCode": "data:image/png;base64,..."
+  }
+}
+```
+
+#### Get Shared Scenario
+```http
+GET /api/share/:shareId
+```
+
+### Video Generation
+
+#### Generate Video
+```http
+POST /api/video/generate
+```
+
+**Request:**
+```json
+{
+  "scenarioId": "scenario123",
+  "options": {
+    "style": "realistic",
+    "duration": 30
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "videoId": "video123",
+    "status": "processing",
+    "estimatedTime": 300
+  }
+}
+```
+
+#### Get Video Status
+```http
+GET /api/video/:videoId/status
 ```
 
 ## Error Responses
 
-All endpoints may return these error formats:
-
 ### 400 Bad Request
 ```json
 {
-  "message": "Validation error message"
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "email",
+      "message": "Email is required"
+    }
+  ]
 }
 ```
 
 ### 401 Unauthorized
 ```json
 {
-  "message": "Access token required"
+  "success": false,
+  "message": "Authentication required"
 }
 ```
 
 ### 403 Forbidden
 ```json
 {
-  "message": "Invalid or expired token"
+  "success": false,
+  "message": "Access denied"
 }
 ```
 
 ### 404 Not Found
 ```json
 {
+  "success": false,
   "message": "Resource not found"
 }
 ```
@@ -178,29 +250,41 @@ All endpoints may return these error formats:
 ### 429 Too Many Requests
 ```json
 {
-  "message": "Too many requests, please try again later"
+  "success": false,
+  "message": "Rate limit exceeded",
+  "retryAfter": 60
 }
 ```
 
 ### 500 Internal Server Error
 ```json
 {
+  "success": false,
   "message": "Internal server error"
 }
 ```
 
 ## Rate Limiting
 
-- **General API**: 100 requests per 15 minutes per IP
-- **Generation endpoint**: 5 requests per minute per IP
+- **General**: 100 requests per 15 minutes
+- **Generation**: 10 requests per hour
+- **Video**: 5 requests per hour
 
-## Content Filtering
+## Pagination
 
-The Generation Service includes basic content filtering to prevent inappropriate content. Filtered topics will receive a generic error message.
+Use query parameters:
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 20, max: 100)
 
-## AI Models
+## Filtering & Sorting
 
-The system attempts to use AI providers in this order:
-1. Google Gemini (if `GEMINI_API_KEY` is provided)
-2. OpenAI GPT-3.5 (if `OPENAI_API_KEY` is provided)
-3. Fallback mock responses (if no API keys are available)
+### Scenarios
+- `sort`: Sort field (createdAt, updatedAt, topic)
+- `order`: Sort order (asc, desc)
+- `search`: Search in topic and content
+- `promptType`: Filter by prompt type
+
+### Example
+```http
+GET /api/history?sort=createdAt&order=desc&search=flying&limit=10
+```

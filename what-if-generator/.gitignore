@@ -32,8 +32,23 @@ coverage/
 # nyc test coverage
 .nyc_output
 
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
 # Dependency directories
 jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
 
 # Optional npm cache directory
 .npm
@@ -59,7 +74,7 @@ jspm_packages/
 # dotenv environment variables file
 .env.test
 
-# parcel-bundler cache (https://parceljs.org/)
+# parcel-bundler cache
 .cache
 .parcel-cache
 
@@ -98,15 +113,26 @@ temp/
 ehthumbs.db
 Thumbs.db
 
-# Database data
-data/
-pgdata/
-mongodb_data/
-redis_data/
+# AWS
+.aws/
+aws-exports.js
 
 # Docker
 .dockerignore
-docker-compose.override.yml
+
+# Kubernetes
+*.kubeconfig
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# CDK
+cdk.out/
+*.d.ts
+*.js.map
 
 # Build outputs
 build/
@@ -117,129 +143,56 @@ out/
 test-results/
 coverage/
 
-# Deployment artifacts
-*.tar.gz
-*.zip
+# Uploads and outputs
+uploads/
+outputs/
+temp/
 
-# Backup files
-*.backup
-*.bak
-
-# API keys and secrets (additional protection)
-**/secrets/
-**/*secret*
-**/*key*
-**/credentials/
-
-# Local development files
-local/
-.local/
-
-# Service-specific ignores
-
-# Frontend specific
-frontend/build/
-frontend/.env.local
-frontend/src/**/*.css.map
-
-# Service logs
-services/*/logs/
-api-gateway/logs/
-
-# K8s local files
-k8s/local/
-k8s/secrets/
-
-# Scripts output
-scripts/output/
-scripts/logs/
-
-# Documentation build
-docs/build/
-docs/_site/
-
-# Terraform (if used)
-*.tfstate
-*.tfstate.*
-.terraform/
-terraform.tfvars
-
-# Helm (if used)
-charts/*/charts/
-charts/*/requirements.lock
-
-# Certificate files
+# Credentials
+credentials/
 *.pem
 *.key
 *.crt
 *.p12
+*.pfx
 
-# Local database files
+# Database
 *.db
 *.sqlite
 *.sqlite3
 
-# Monitoring data
-grafana/data/
-prometheus/data/
+# Redis
+dump.rdb
 
-# IDE and editor files
-*.sublime-project
-*.sublime-workspace
-.atom/
-.brackets.json
-*.code-workspace
+# Backup files
+*.bak
+*.backup
+*.old
 
-# Python (if any Python scripts)
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-pip-log.txt
-pip-delete-this-directory.txt
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Ruby (if any Ruby scripts)
-*.gem
-*.rbc
-/.config
-/coverage/
-/InstalledFiles
-/pkg/
-/spec/reports/
-/spec/examples.txt
-/test/tmp/
-/test/version_tmp/
-/tmp/
+# OS
+.DS_Store
+Thumbs.db
 
-# Go (if any Go services)
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-vendor/
+# Local development
+.local/
+local/
 
-# Java (if any Java services)
-*.class
-*.jar
-*.war
-*.ear
-*.zip
-*.tar.gz
-*.rar
+# Secrets
+secrets/
+*.secret
+*.env.secret
 
-# Additional security
-.aws/
-.gcp/
-.azure/
+# Monitoring
+monitoring/
+grafana/
+prometheus/
 
-# Keep these files
-!.gitkeep
-!.env.example
-!.env.template
-
-# Docker overrides
-docker-compose.dev.yml
-docker-compose.prod.yml
-docker-compose.local.yml
+# Documentation build
+docs/_build/
+site/
