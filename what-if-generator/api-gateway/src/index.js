@@ -182,7 +182,8 @@ app.get('/', (req, res) => {
         sharing: '/api/sharing/*',
         reporting: '/api/reporting/*',
         video: '/api/video/*',
-        tts: '/api/tts/*'
+        tts: '/api/tts/*',
+        storyHub: '/api/story-hub/*'
       },
       public: {
         shared: '/shared/*',

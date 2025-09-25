@@ -27,7 +27,8 @@ const services = {
       { path: '/random', target: '/random' },
       { path: '/regenerate', target: '/regenerate' },
       { path: '/batch', target: '/batch' },
-      { path: '/generation', target: '/' }
+      { path: '/generation', target: '/' },
+      { path: '/story-hub', target: '/story-hub' }
     ]
   },
   
@@ -140,6 +141,16 @@ const routeMap = {
   '/api/regenerate': { service: 'generation', target: '/regenerate' },
   '/api/batch-generate': { service: 'generation', target: '/batch' },
   
+  // Story Hub routes
+  '/api/story-hub/generate-script': { service: 'generation', target: '/story-hub/generate-script' },
+  '/api/story-hub/generate-audio': { service: 'generation', target: '/story-hub/generate-audio' },
+  '/api/story-hub/credits': { service: 'generation', target: '/story-hub/credits' },
+  '/api/story-hub/pricing': { service: 'generation', target: '/story-hub/pricing' },
+  '/api/story-hub/upgrade': { service: 'generation', target: '/story-hub/upgrade' },
+  '/api/story-hub/verify-upgrade': { service: 'generation', target: '/story-hub/verify-upgrade' },
+  '/api/story-hub/premium-status': { service: 'generation', target: '/story-hub/premium-status' },
+  '/api/story-hub/health': { service: 'generation', target: '/story-hub/health' },
+  
   // History routes
   '/api/scenarios/my': { service: 'history', target: '/scenarios/my' },
   '/api/scenarios/search': { service: 'history', target: '/scenarios/search' },
@@ -162,6 +173,7 @@ const routeMap = {
   // Video generation routes
   '/api/video/generate': { service: 'video', target: '/video/generate' },
   '/api/video/generate-video-only': { service: 'video', target: '/video/generate-video-only' },
+  '/api/video/generate-story-hub': { service: 'video', target: '/video/generate-story-hub' },
   '/api/video/status': { service: 'video', target: '/video/status' },
   '/api/video/download': { service: 'video', target: '/video/download' },
   '/api/video/providers': { service: 'video', target: '/video/providers' },

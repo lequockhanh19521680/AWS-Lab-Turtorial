@@ -12,6 +12,7 @@ const logger = require('./config/logger');
 
 // Import routes
 const generationRoutes = require('./routes/generation');
+const storyHubRoutes = require('./routes/storyHub');
 
 // Import middleware
 const { generalLimiter } = require('./middleware/rateLimiter');
@@ -94,6 +95,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
 
 // Routes
 app.use('/', generationRoutes);
+app.use('/story-hub', storyHubRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
