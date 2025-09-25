@@ -178,6 +178,29 @@ services:
     networks:
       - what-if-network
 
+  social-service:
+    build:
+      context: ./services/social-service
+      dockerfile: Dockerfile
+    container_name: what-if-social-service
+    environment:
+      NODE_ENV: development
+      PORT: 3006
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/what_if_social?authSource=admin
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      USER_SERVICE_URL: http://user-service:3001
+    ports:
+      - "3006:3006"
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./services/social-service:/app
+      - /app/node_modules
+    networks:
+      - what-if-network
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -191,6 +214,7 @@ services:
       HISTORY_SERVICE_URL: http://history-service:3003
       SHARING_SERVICE_URL: http://sharing-service:3004
       VIDEO_SERVICE_URL: http://video-service:3005
+      SOCIAL_SERVICE_URL: http://social-service:3006
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       REDIS_URL: redis://redis:6379
     ports:
@@ -201,6 +225,7 @@ services:
       - history-service
       - sharing-service
       - video-service
+      - social-service
       - redis
     volumes:
       - ./api-gateway:/app

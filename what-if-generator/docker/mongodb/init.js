@@ -441,5 +441,177 @@ log('- Application user: what_if_app / app_password_123');
 log('- History service: history_service / history_pass_123');
 log('- Sharing service: sharing_service / sharing_pass_123');
 log('');
+// ========================================
+// SOCIAL MEDIA SERVICE DATABASE SETUP
+// ========================================
+
+log('Setting up Social Media Service database...');
+db = db.getSiblingDB('what_if_social');
+
+// Create collections
+db.createCollection('achievements');
+db.createCollection('userachievements');
+db.createCollection('posts');
+db.createCollection('comments');
+db.createCollection('userprofiles');
+log('Created social media collections');
+
+// Create indexes for achievements collection
+db.achievements.createIndex({ "achievementId": 1 }, { unique: true });
+db.achievements.createIndex({ "category": 1 });
+db.achievements.createIndex({ "rarity": 1 });
+db.achievements.createIndex({ "isActive": 1 });
+db.achievements.createIndex({ "isHidden": 1 });
+
+// Create indexes for userachievements collection
+db.userachievements.createIndex({ "userAchievementId": 1 }, { unique: true });
+db.userachievements.createIndex({ "userId": 1 });
+db.userachievements.createIndex({ "achievementId": 1 });
+db.userachievements.createIndex({ "userId": 1, "achievementId": 1 }, { unique: true });
+db.userachievements.createIndex({ "userId": 1, "isCompleted": 1 });
+db.userachievements.createIndex({ "unlockedAt": -1 });
+
+// Create indexes for posts collection
+db.posts.createIndex({ "postId": 1 }, { unique: true });
+db.posts.createIndex({ "userId": 1 });
+db.posts.createIndex({ "userId": 1, "isDeleted": 1, "createdAt": -1 });
+db.posts.createIndex({ "visibility": 1, "isDeleted": 1, "createdAt": -1 });
+db.posts.createIndex({ "tags": 1, "isDeleted": 1, "createdAt": -1 });
+db.posts.createIndex({ "likes.count": -1, "createdAt": -1 });
+db.posts.createIndex({ "shares.count": -1, "createdAt": -1 });
+db.posts.createIndex({ "type": 1, "isDeleted": 1 });
+db.posts.createIndex({ "scenarioId": 1 });
+
+// Create indexes for comments collection
+db.comments.createIndex({ "commentId": 1 }, { unique: true });
+db.comments.createIndex({ "postId": 1, "isDeleted": 1, "createdAt": -1 });
+db.comments.createIndex({ "userId": 1, "isDeleted": 1, "createdAt": -1 });
+db.comments.createIndex({ "parentCommentId": 1, "isDeleted": 1, "createdAt": -1 });
+
+// Create indexes for userprofiles collection
+db.userprofiles.createIndex({ "userId": 1 }, { unique: true });
+db.userprofiles.createIndex({ "username": 1 }, { unique: true });
+db.userprofiles.createIndex({ "stats.followers": -1 });
+db.userprofiles.createIndex({ "stats.reputation": -1 });
+db.userprofiles.createIndex({ "stats.level": -1 });
+db.userprofiles.createIndex({ "lastActiveAt": -1 });
+db.userprofiles.createIndex({ "isBanned": 1 });
+
+log('Created indexes for social media collections');
+
+// Insert default achievements
+db.achievements.insertMany([
+  {
+    "achievementId": "first_scenario",
+    "name": "First Steps",
+    "description": "Tạo viễn cảnh đầu tiên của bạn",
+    "category": "creation",
+    "icon": "🌟",
+    "badge": "first-steps",
+    "points": 10,
+    "rarity": "common",
+    "requirements": {
+      "type": "scenario_created",
+      "count": 1
+    },
+    "isActive": true,
+    "isHidden": false,
+    "createdAt": new Date(),
+    "updatedAt": new Date()
+  },
+  {
+    "achievementId": "scenario_master",
+    "name": "Master Creator",
+    "description": "Tạo 100 viễn cảnh",
+    "category": "creation",
+    "icon": "🎭",
+    "badge": "master-creator",
+    "points": 100,
+    "rarity": "rare",
+    "requirements": {
+      "type": "scenario_created",
+      "count": 100
+    },
+    "isActive": true,
+    "isHidden": false,
+    "createdAt": new Date(),
+    "updatedAt": new Date()
+  },
+  {
+    "achievementId": "social_butterfly",
+    "name": "Social Butterfly",
+    "description": "Nhận được 100 lượt like",
+    "category": "social",
+    "icon": "🦋",
+    "badge": "social-butterfly",
+    "points": 75,
+    "rarity": "uncommon",
+    "requirements": {
+      "type": "likes_received",
+      "count": 100
+    },
+    "isActive": true,
+    "isHidden": false,
+    "createdAt": new Date(),
+    "updatedAt": new Date()
+  },
+  {
+    "achievementId": "influencer",
+    "name": "Influencer",
+    "description": "Có 1000 follower",
+    "category": "social",
+    "icon": "👑",
+    "badge": "influencer",
+    "points": 200,
+    "rarity": "epic",
+    "requirements": {
+      "type": "followers",
+      "count": 1000
+    },
+    "isActive": true,
+    "isHidden": false,
+    "createdAt": new Date(),
+    "updatedAt": new Date()
+  },
+  {
+    "achievementId": "legend",
+    "name": "Legend",
+    "description": "Đạt level 50",
+    "category": "milestone",
+    "icon": "🏆",
+    "badge": "legend",
+    "points": 500,
+    "rarity": "legendary",
+    "requirements": {
+      "type": "level",
+      "count": 50
+    },
+    "isActive": true,
+    "isHidden": false,
+    "createdAt": new Date(),
+    "updatedAt": new Date()
+  }
+]);
+
+log('Inserted default achievements');
+
+// Create social service user
+try {
+    db.createUser({
+        user: 'social_service',
+        pwd: 'social_pass_123',
+        roles: [{ role: 'readWrite', db: 'what_if_social' }]
+    });
+    log('Created social service user');
+} catch (e) {
+    if (e.code !== 11000) {
+        log('Error creating social service user: ' + e.message);
+    }
+}
+
 log('Sample data has been inserted for testing purposes.');
 log('Remember to change default passwords in production!');
+log('');
+log('Social Media database: what_if_social');
+log('- achievements, userachievements, posts, comments, userprofiles collections');
+log('- Default achievements inserted');

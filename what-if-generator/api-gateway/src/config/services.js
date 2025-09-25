@@ -67,6 +67,20 @@ const services = {
       { path: '/video', target: '/video' },
       { path: '/tts', target: '/tts' }
     ]
+  },
+  
+  social: {
+    name: 'Social Media Service',
+    url: process.env.SOCIAL_SERVICE_URL || 'http://localhost:3006',
+    healthPath: '/health',
+    timeout: 15000,
+    retries: 3,
+    routes: [
+      { path: '/social', target: '/api/social' },
+      { path: '/achievements', target: '/api/achievements' },
+      { path: '/interactions', target: '/api/interactions' },
+      { path: '/feed', target: '/api/feed' }
+    ]
   }
 };
 
@@ -186,6 +200,26 @@ const routeMap = {
   '/api/tts/download': { service: 'video', target: '/tts/download' },
   '/api/tts/health': { service: 'video', target: '/tts/health' },
   '/api/tts/estimate-duration': { service: 'video', target: '/tts/estimate-duration' },
+  
+  // Social Media routes
+  '/api/social/posts': { service: 'social', target: '/api/social/posts' },
+  '/api/social/comments': { service: 'social', target: '/api/social/comments' },
+  '/api/achievements': { service: 'social', target: '/api/achievements' },
+  '/api/interactions': { service: 'social', target: '/api/interactions' },
+  '/api/feed': { service: 'social', target: '/api/feed' },
+  
+  // OAuth routes
+  '/api/auth/google': { service: 'user', target: '/api/auth/google' },
+  '/api/auth/google/callback': { service: 'user', target: '/api/auth/google/callback' },
+  '/api/auth/facebook': { service: 'user', target: '/api/auth/facebook' },
+  '/api/auth/facebook/callback': { service: 'user', target: '/api/auth/facebook/callback' },
+  '/api/auth/link': { service: 'user', target: '/api/auth/link' },
+  '/api/auth/unlink': { service: 'user', target: '/api/auth/unlink' },
+  
+  // Profile routes
+  '/api/profiles': { service: 'user', target: '/profiles' },
+  '/api/profiles/leaderboard': { service: 'user', target: '/profiles/leaderboard' },
+  '/api/profiles/search': { service: 'user', target: '/profiles/search' },
   
   // Admin routes
   '/api/admin/users': { service: 'user', target: '/users' },
