@@ -1,109 +1,189 @@
 version: '3.8'
 
 services:
-  # Database
+  # Databases
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
+    container_name: what-if-postgres
     environment:
-      POSTGRES_DB: whatif_main
-      POSTGRES_USER: whatif_user
-      POSTGRES_PASSWORD: whatif_password
+      POSTGRES_DB: what_if_users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - whatif-network
+      - what-if-network
+
+  mongodb:
+    image: mongo:7-jammy
+    container_name: what-if-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: what_if_history
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongodb/init.js:/docker-entrypoint-initdb.d/init.js
+    networks:
+      - what-if-network
 
   # Redis for caching and session management
   redis:
     image: redis:7-alpine
+    container_name: what-if-redis
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
-      - whatif-network
+      - what-if-network
 
-  # API Gateway
-  api-gateway:
-    build: ./backend/api-gateway
+  # Microservices
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: what-if-user-service
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: what_if_users
+      DB_USER: postgres
+      DB_PASSWORD: postgres123
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      REDIS_URL: redis://redis:6379
     ports:
       - "3001:3001"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./services/user-service:/app
+      - /app/node_modules
+    networks:
+      - what-if-network
+
+  generation-service:
+    build:
+      context: ./services/generation-service
+      dockerfile: Dockerfile
+    container_name: what-if-generation-service
     environment:
-      - NODE_ENV=development
-      - USER_SERVICE_URL=http://user-service:3002
-      - GENERATION_SERVICE_URL=http://generation-service:3003
-      - HISTORY_SERVICE_URL=http://history-service:3004
-      - REDIS_URL=redis://redis:6379
+      NODE_ENV: development
+      PORT: 3002
+      GEMINI_API_KEY: your-gemini-api-key-here
+      REDIS_URL: redis://redis:6379
+      HISTORY_SERVICE_URL: http://history-service:3003
+    ports:
+      - "3002:3002"
     depends_on:
       - redis
+    volumes:
+      - ./services/generation-service:/app
+      - /app/node_modules
+    networks:
+      - what-if-network
+
+  history-service:
+    build:
+      context: ./services/history-service
+      dockerfile: Dockerfile
+    container_name: what-if-history-service
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/what_if_history?authSource=admin
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3003:3003"
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./services/history-service:/app
+      - /app/node_modules
+    networks:
+      - what-if-network
+
+  sharing-service:
+    build:
+      context: ./services/sharing-service
+      dockerfile: Dockerfile
+    container_name: what-if-sharing-service
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/what_if_sharing?authSource=admin
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3004:3004"
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./services/sharing-service:/app
+      - /app/node_modules
+    networks:
+      - what-if-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: what-if-api-gateway
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      USER_SERVICE_URL: http://user-service:3001
+      GENERATION_SERVICE_URL: http://generation-service:3002
+      HISTORY_SERVICE_URL: http://history-service:3003
+      SHARING_SERVICE_URL: http://sharing-service:3004
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3000:3000"
+    depends_on:
       - user-service
       - generation-service
       - history-service
-    networks:
-      - whatif-network
-
-  # User Service
-  user-service:
-    build: ./backend/user-service
-    ports:
-      - "3002:3002"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://whatif_user:whatif_password@postgres:5432/whatif_users
-      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - postgres
+      - sharing-service
       - redis
+    volumes:
+      - ./api-gateway:/app
+      - /app/node_modules
     networks:
-      - whatif-network
+      - what-if-network
 
-  # Generation Service
-  generation-service:
-    build: ./backend/generation-service
-    ports:
-      - "3003:3003"
-    environment:
-      - NODE_ENV=development
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - redis
-    networks:
-      - whatif-network
-
-  # History Service
-  history-service:
-    build: ./backend/history-service
-    ports:
-      - "3004:3004"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://whatif_user:whatif_password@postgres:5432/whatif_history
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - postgres
-      - redis
-    networks:
-      - whatif-network
-
-  # Frontend
   frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: what-if-frontend
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      REACT_APP_API_URL: http://localhost:3000
+      REACT_APP_ENVIRONMENT: development
+    ports:
+      - "3005:3000"
     depends_on:
       - api-gateway
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     networks:
-      - whatif-network
+      - what-if-network
 
 volumes:
   postgres_data:
+  mongodb_data:
+  redis_data:
 
 networks:
-  whatif-network:
+  what-if-network:
     driver: bridge

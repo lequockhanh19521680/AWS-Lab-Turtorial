@@ -3,10 +3,24 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 lerna-debug.log*
 
 # Runtime data
-pids
+pids/
 *.pid
 *.seed
 *.pid.lock
@@ -18,30 +32,20 @@ coverage/
 # nyc test coverage
 .nyc_output
 
-# Grunt intermediate storage
-.grunt
-
-# Bower dependency directory
-bower_components
-
-# node-waf configuration
-.lock-wscript
-
-# Compiled binary addons
-build/Release
-
 # Dependency directories
-node_modules/
 jspm_packages/
-
-# TypeScript cache
-*.tsbuildinfo
 
 # Optional npm cache directory
 .npm
 
 # Optional eslint cache
 .eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -53,18 +57,14 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
 .env.test
-.env.local
-.env.production
 
-# parcel-bundler cache
+# parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
 
 # Next.js build output
 .next
-out/
 
 # Nuxt.js build / generate output
 .nuxt
@@ -74,61 +74,172 @@ dist
 .cache/
 public
 
-# Vuepress build output
-.vuepress/dist
+# Storybook build outputs
+.out
+.storybook-out
 
-# Serverless directories
-.serverless/
+# Temporary folders
+tmp/
+temp/
 
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# Logs
-logs
-*.log
-
-# Database
-*.db
-*.sqlite
-
-# Docker
-.docker
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Linux
-*~
-
-# IDEs
+# Editor directories and files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Database data
+data/
+pgdata/
+mongodb_data/
+redis_data/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
 # Build outputs
-dist/
 build/
+dist/
+out/
 
-# TypeScript build outputs
-*.js.map
-*.d.ts
+# Test outputs
+test-results/
+coverage/
 
-# Temporary files
-tmp/
-temp/
+# Deployment artifacts
+*.tar.gz
+*.zip
+
+# Backup files
+*.backup
+*.bak
+
+# API keys and secrets (additional protection)
+**/secrets/
+**/*secret*
+**/*key*
+**/credentials/
+
+# Local development files
+local/
+.local/
+
+# Service-specific ignores
+
+# Frontend specific
+frontend/build/
+frontend/.env.local
+frontend/src/**/*.css.map
+
+# Service logs
+services/*/logs/
+api-gateway/logs/
+
+# K8s local files
+k8s/local/
+k8s/secrets/
+
+# Scripts output
+scripts/output/
+scripts/logs/
+
+# Documentation build
+docs/build/
+docs/_site/
+
+# Terraform (if used)
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+
+# Helm (if used)
+charts/*/charts/
+charts/*/requirements.lock
+
+# Certificate files
+*.pem
+*.key
+*.crt
+*.p12
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Monitoring data
+grafana/data/
+prometheus/data/
+
+# IDE and editor files
+*.sublime-project
+*.sublime-workspace
+.atom/
+.brackets.json
+*.code-workspace
+
+# Python (if any Python scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Ruby (if any Ruby scripts)
+*.gem
+*.rbc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
+/tmp/
+
+# Go (if any Go services)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+vendor/
+
+# Java (if any Java services)
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Additional security
+.aws/
+.gcp/
+.azure/
+
+# Keep these files
+!.gitkeep
+!.env.example
+!.env.template
+
+# Docker overrides
+docker-compose.dev.yml
+docker-compose.prod.yml
+docker-compose.local.yml
