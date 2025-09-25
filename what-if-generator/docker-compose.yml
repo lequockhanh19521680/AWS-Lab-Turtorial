@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: whatif_main
+      POSTGRES_USER: whatif_user
+      POSTGRES_PASSWORD: whatif_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - whatif-network
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - whatif-network
+
+  # API Gateway
+  api-gateway:
+    build: ./backend/api-gateway
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - USER_SERVICE_URL=http://user-service:3002
+      - GENERATION_SERVICE_URL=http://generation-service:3003
+      - HISTORY_SERVICE_URL=http://history-service:3004
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - user-service
+      - generation-service
+      - history-service
+    networks:
+      - whatif-network
+
+  # User Service
+  user-service:
+    build: ./backend/user-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://whatif_user:whatif_password@postgres:5432/whatif_users
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - whatif-network
+
+  # Generation Service
+  generation-service:
+    build: ./backend/generation-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - whatif-network
+
+  # History Service
+  history-service:
+    build: ./backend/history-service
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://whatif_user:whatif_password@postgres:5432/whatif_history
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - whatif-network
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      - api-gateway
+    networks:
+      - whatif-network
+
+volumes:
+  postgres_data:
+
+networks:
+  whatif-network:
+    driver: bridge
