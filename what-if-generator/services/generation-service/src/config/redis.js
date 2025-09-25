@@ -1,12 +1,12 @@
 const redis = require('redis');
-require('dotenv').config();
+const { config } = require('../../../shared/config/env');
 
 let client;
 
 const connectRedis = async () => {
   try {
     client = redis.createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379'
+      url: config.REDIS_URL
     });
 
     client.on('error', (err) => {
