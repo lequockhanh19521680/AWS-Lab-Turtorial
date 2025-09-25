@@ -1,0 +1,33 @@
+{
+  "name": "what-if-generator",
+  "version": "1.0.0",
+  "description": "What If Generator - AI-powered scenario creation platform",
+  "scripts": {
+    "dev:db": "docker-compose -f docker-compose.dev.yml up -d",
+    "dev:stop": "docker-compose -f docker-compose.dev.yml down",
+    "build:all": "npm run build:api-gateway && npm run build:user-service && npm run build:generation-service && npm run build:history-service && npm run build:frontend",
+    "build:api-gateway": "cd backend/api-gateway && npm run build",
+    "build:user-service": "cd backend/user-service && npm run build",
+    "build:generation-service": "cd backend/generation-service && npm run build",
+    "build:history-service": "cd backend/history-service && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "dev:api-gateway": "cd backend/api-gateway && npm run dev",
+    "dev:user-service": "cd backend/user-service && npm run dev",
+    "dev:generation-service": "cd backend/generation-service && npm run dev",
+    "dev:history-service": "cd backend/history-service && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "npm run install:api-gateway && npm run install:user-service && npm run install:generation-service && npm run install:history-service && npm run install:frontend",
+    "install:api-gateway": "cd backend/api-gateway && npm ci",
+    "install:user-service": "cd backend/user-service && npm ci",
+    "install:generation-service": "cd backend/generation-service && npm ci",
+    "install:history-service": "cd backend/history-service && npm ci",
+    "install:frontend": "cd frontend && npm ci",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": ["ai", "scenarios", "generator", "microservices", "nextjs"],
+  "author": "What If Generator Team",
+  "license": "MIT"
+}
