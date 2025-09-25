@@ -277,6 +277,154 @@ class VideoController {
   }
 
   /**
+   * Generate 3D video for Story Hub (Premium feature)
+   */
+  async generateStoryHubVideo(req, res) {
+    try {
+      const { script, audioUrl, options = {} } = req.body;
+      const userId = req.user?.id;
+
+      // Check if user has premium access
+      if (userId) {
+        const hasPremium = await this.checkUserPremiumAccess(userId);
+        if (!hasPremium) {
+          return res.status(402).json({
+            success: false,
+            message: 'Premium subscription required for 3D video generation'
+          });
+        }
+      }
+
+      logger.info('Generating Story Hub 3D video', {
+        userId,
+        scriptLength: script?.length,
+        audioUrl,
+        options
+      });
+
+      // Validate input
+      if (!script || !audioUrl) {
+        return res.status(400).json({
+          success: false,
+          message: 'Script and audioUrl are required'
+        });
+      }
+
+      // Generate video prompt from script
+      const videoPrompt = this.generateStoryHubVideoPrompt(script, options);
+      
+      // Generate 3D video
+      const videoOptions = {
+        duration: this.calculateVideoDuration(script, options.duration),
+        resolution: '1920x1080',
+        style: options.style || 'cinematic',
+        quality: options.quality || 'high',
+        fps: 30,
+        ...options
+      };
+
+      const videoResult = await this.videoService.generateVideo(videoPrompt, videoOptions);
+      
+      // Create video with audio synchronization
+      const combinedVideoPath = `outputs/story-hub/video_${videoResult.jobId}.mp4`;
+      await this.videoService.createVideoWithAudio(
+        videoResult.filePath,
+        audioUrl,
+        combinedVideoPath
+      );
+
+      logger.info('Story Hub video generated successfully', {
+        jobId: videoResult.jobId,
+        userId,
+        videoPath: combinedVideoPath
+      });
+
+      res.json({
+        success: true,
+        data: {
+          jobId: videoResult.jobId,
+          status: 'completed',
+          videoUrl: `/api/video/download/${videoResult.jobId}`,
+          estimatedTime: videoResult.estimatedTime,
+          duration: videoOptions.duration,
+          quality: videoOptions.quality,
+          style: videoOptions.style
+        }
+      });
+
+    } catch (error) {
+      logger.error('Story Hub video generation failed', {
+        error: error.message,
+        userId: req.user?.id
+      });
+
+      res.status(500).json({
+        success: false,
+        message: 'Video generation failed',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Check if user has premium access
+   */
+  async checkUserPremiumAccess(userId) {
+    try {
+      // In a real implementation, this would check the user's subscription status
+      // For now, return true for demo purposes
+      return true;
+    } catch (error) {
+      logger.warn('Failed to check premium access', { error: error.message, userId });
+      return false;
+    }
+  }
+
+  /**
+   * Generate video prompt from Story Hub script
+   */
+  generateStoryHubVideoPrompt(script, options) {
+    const style = options.style || 'cinematic';
+    const quality = options.quality || 'high';
+    
+    return `Create a ${quality} quality ${style} 3D video based on this story script:
+
+${script}
+
+Requirements:
+- Professional 3D animation quality
+- Cinematic camera movements
+- Dynamic lighting and shadows
+- Character animations that match the dialogue
+- Environmental details that enhance the story
+- Smooth transitions between scenes
+- High visual fidelity with attention to detail
+
+Style: ${style}
+Quality: ${quality}
+Duration: Auto-calculated based on script length`;
+  }
+
+  /**
+   * Calculate video duration based on script
+   */
+  calculateVideoDuration(script, durationOption) {
+    if (durationOption && durationOption !== 'auto') {
+      const durationMap = {
+        'short': 15,
+        'medium': 30,
+        'long': 60
+      };
+      return durationMap[durationOption] || 30;
+    }
+
+    // Auto-calculate based on script length (roughly 150 words per minute)
+    const wordCount = script.split(/\s+/).length;
+    const estimatedMinutes = Math.ceil(wordCount / 150);
+    return Math.max(15, Math.min(120, estimatedMinutes * 60)); // 15 seconds to 2 minutes
+  }
+
+  /**
    * Clean up old files
    */
   async cleanupFiles(req, res) {

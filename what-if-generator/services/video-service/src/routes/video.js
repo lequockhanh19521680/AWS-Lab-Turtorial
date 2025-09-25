@@ -243,6 +243,76 @@ router.get('/providers', async (req, res) => {
 
 /**
  * @swagger
+ * /video/generate-story-hub:
+ *   post:
+ *     summary: Generate 3D video for Story Hub (Premium feature)
+ *     tags: [Video - Story Hub]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - script
+ *               - audioUrl
+ *             properties:
+ *               script:
+ *                 type: string
+ *                 description: The story script content
+ *               audioUrl:
+ *                 type: string
+ *                 description: URL to the generated audio file
+ *               options:
+ *                 type: object
+ *                 properties:
+ *                   quality:
+ *                     type: string
+ *                     enum: [high, medium, low]
+ *                     default: "high"
+ *                   style:
+ *                     type: string
+ *                     enum: [cinematic, realistic, artistic]
+ *                     default: "cinematic"
+ *                   duration:
+ *                     type: string
+ *                     enum: [auto, short, medium, long]
+ *                     default: "auto"
+ *     responses:
+ *       200:
+ *         description: Video generation started successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     jobId:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                       enum: [pending, processing, completed, failed]
+ *                     estimatedTime:
+ *                       type: integer
+ *                     videoUrl:
+ *                       type: string
+ *       402:
+ *         description: Premium subscription required
+ *       500:
+ *         description: Server error
+ */
+router.post('/generate-story-hub', optionalAuth, async (req, res) => {
+  await videoController.generateStoryHubVideo(req, res);
+});
+
+/**
+ * @swagger
  * /video/cleanup:
  *   post:
  *     summary: Clean up old video files
