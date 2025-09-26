@@ -312,33 +312,26 @@ Resources:
       UnhealthyThresholdCount: 3
       TargetType: ip
 
-  FrontendTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      Name: !Sub '${AWS::StackName}-frontend-tg'
-      Port: 3005
-      Protocol: HTTP
-      VpcId: !Ref VPC
-      HealthCheckPath: /
-      HealthCheckProtocol: HTTP
-      HealthCheckIntervalSeconds: 30
-      HealthCheckTimeoutSeconds: 5
-      HealthyThresholdCount: 2
-      UnhealthyThresholdCount: 3
-      TargetType: ip
+  # Frontend is served via S3 + CloudFront, not ALB
+  # FrontendTargetGroup removed - frontend should not be behind ALB
 
-  # ALB Listeners
+  # ALB Listeners - FIXED ARCHITECTURE
   ALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
         - Type: forward
-          TargetGroupArn: !Ref FrontendTargetGroup
+          TargetGroupArn: !Ref APITargetGroup
       LoadBalancerArn: !Ref ApplicationLoadBalancer
       Port: 80
       Protocol: HTTP
 
-  APIListener:
+  # Route all traffic through API Gateway first
+  # API Gateway will handle routing to appropriate services
+  # Frontend should be served via CDN/S3, not directly through ALB
+  
+  # Health check route
+  HealthCheckListener:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
@@ -347,9 +340,24 @@ Resources:
       Conditions:
         - Field: path-pattern
           Values:
-            - /api/*
+            - /health
+            - /health/*
       ListenerArn: !Ref ALBListener
       Priority: 1
+
+  # All other traffic goes to API Gateway
+  DefaultAPIListener:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref APITargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /*
+      ListenerArn: !Ref ALBListener
+      Priority: 2
 
   # ECS Cluster
   ECSCluster:
@@ -455,34 +463,9 @@ Resources:
             - ContainerName: xray-daemon
               Condition: START
 
-  FrontendTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: !Sub '${AWS::StackName}-frontend-task'
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      Cpu: 256
-      Memory: 512
-      ExecutionRoleArn: !Ref ECSTaskExecutionRole
-      TaskRoleArn: !Ref ECSTaskRole
-      ContainerDefinitions:
-        - Name: frontend
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/what-if-generator-frontend:latest'
-          PortMappings:
-            - ContainerPort: 3005
-              Protocol: tcp
-          Environment:
-            - Name: NODE_ENV
-              Value: !Ref Environment
-            - Name: PORT
-              Value: '3005'
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref LogGroup
-              awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: frontend
+  # Frontend should be deployed to S3 + CloudFront, not ECS
+  # FrontendTaskDefinition removed - use S3 for static assets
+  # Build process should generate static files and upload to S3
 
   # ECS Services
   APIService:
@@ -510,26 +493,7 @@ Resources:
           ContainerName: api-gateway
           ContainerPort: 3000
 
-  FrontendService:
-    Type: AWS::ECS::Service
-    Properties:
-      ServiceName: !Sub '${AWS::StackName}-frontend-service'
-      Cluster: !Ref ECSCluster
-      TaskDefinition: !Ref FrontendTaskDefinition
-      DesiredCount: 2
-      LaunchType: FARGATE
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          SecurityGroups:
-            - !Ref WebSecurityGroup
-          Subnets:
-            - !Ref PrivateSubnet1
-            - !Ref PrivateSubnet2
-          AssignPublicIp: DISABLED
-      LoadBalancers:
-        - ContainerName: frontend
-          ContainerPort: 3005
-          TargetGroupArn: !Ref FrontendTargetGroup
+  # Frontend service removed - frontend is served from S3
 
   # Auto Scaling
   APIServiceAutoScalingTarget:

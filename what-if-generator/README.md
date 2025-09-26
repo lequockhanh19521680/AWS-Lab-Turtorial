@@ -54,24 +54,51 @@ What If Generator là một nền tảng AI cho phép người dùng tạo ra c�
 
 ## 🚀 Quick Start
 
-### Development Setup
+### Prerequisites
+
+- **Docker & Docker Compose** (latest version)
+- **Node.js 18+** and npm
+- **Git** for version control
+
+### Automated Development Setup
 
 ```bash
 # Clone repository
 git clone <repository-url>
 cd what-if-generator
 
-# Copy environment configuration
-cp .env.example .env.development
+# Run automated setup script
+./scripts/setup-local.sh
+```
 
-# Start services with Docker Compose
+The setup script will:
+1. ✅ Check prerequisites
+2. 🔧 Create environment configuration
+3. 📁 Create necessary directories  
+4. 📦 Install all dependencies
+5. 🐳 Start Docker services
+6. 🗄️ Setup DynamoDB tables
+7. 🏥 Verify service health
+
+### Manual Development Setup
+
+```bash
+# 1. Copy and configure environment
+cp .env.example .env.local
+# Edit .env.local with your API keys
+
+# 2. Start infrastructure services first
+docker-compose up -d postgres dynamodb redis
+
+# 3. Start application services
 docker-compose up -d
 
-# Setup DynamoDB tables
+# 4. Setup DynamoDB tables
 node scripts/setup-dynamodb-tables.js development
 
-# Access application
-open http://localhost:3005
+# 5. Access application
+open http://localhost:3007  # Frontend (FIXED PORT)
+open http://localhost:3000  # API Gateway
 ```
 
 ### Production Deployment
@@ -105,21 +132,36 @@ node scripts/migrate-to-aws.js production
 
 ## 🔧 Environment Configuration
 
-### Development (.env.development)
-```bash
-NODE_ENV=development
-DYNAMODB_ENDPOINT=http://localhost:8000
-POSTGRES_HOST=localhost
-REDIS_URL=redis://localhost:6379
-```
+### Configuration Files (UPDATED)
 
-### Production (.env.production)
-```bash
-NODE_ENV=production
-RDS_POSTGRES_HOST=your-rds-endpoint
-ELASTICACHE_REDIS_HOST=your-elasticache-endpoint
-AWS_REGION=us-east-1
-```
+The project now uses a proper environment configuration system:
+
+- **`.env.example`** - Template with all available settings
+- **`.env.development`** - Development environment settings
+- **`.env.test`** - Test environment settings  
+- **`.env.production`** - Production environment settings
+- **`.env.local`** - Local overrides (gitignored)
+
+### Service Ports (FIXED ARCHITECTURE)
+
+**⚠️ IMPORTANT: Ports are now fixed and should NOT be changed**
+
+- **API Gateway**: `3000` (External entry point)
+- **User Service**: `3001` 
+- **Generation Service**: `3002`
+- **History Service**: `3003`
+- **Sharing Service**: `3004`
+- **Video Service**: `3005`
+- **Social Service**: `3006`
+- **Frontend**: `3007` (Development only)
+
+### Key Configuration Changes
+
+1. **Frontend Port**: Changed from `3005` to `3007` (conflict resolved)
+2. **Load Balancer**: Now correctly routes ALL traffic through API Gateway
+3. **Environment Files**: Proper .env file hierarchy
+4. **Security**: JWT secrets and API keys properly managed
+5. **Database**: Complete migration from MongoDB to DynamoDB
 
 ## 🐳 Docker Commands
 

@@ -1,0 +1,164 @@
+# ConfigMap for What If Generator
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: what-if-config
+  namespace: what-if-generator
+  labels:
+    app: what-if-generator
+data:
+  # Application
+  NODE_ENV: "production"
+  APP_NAME: "what-if-generator"
+  APP_VERSION: "1.0.0"
+  
+  # Service Ports (Fixed Architecture)
+  API_GATEWAY_PORT: "3000"
+  USER_SERVICE_PORT: "3001"
+  GENERATION_SERVICE_PORT: "3002"
+  HISTORY_SERVICE_PORT: "3003"
+  SHARING_SERVICE_PORT: "3004"
+  VIDEO_SERVICE_PORT: "3005"
+  SOCIAL_SERVICE_PORT: "3006"
+  FRONTEND_PORT: "3007"
+  
+  # Service URLs (Internal K8s)
+  USER_SERVICE_URL: "http://user-service:3001"
+  GENERATION_SERVICE_URL: "http://generation-service:3002"
+  HISTORY_SERVICE_URL: "http://history-service:3003"
+  SHARING_SERVICE_URL: "http://sharing-service:3004"
+  VIDEO_SERVICE_URL: "http://video-service:3005"
+  SOCIAL_SERVICE_URL: "http://social-service:3006"
+  FRONTEND_URL: "https://whatifgenerator.com"
+  
+  # Database Configuration
+  POSTGRES_HOST: "postgresql-service"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "what_if_users"
+  POSTGRES_USER: "postgres"
+  
+  # DynamoDB Configuration
+  DYNAMODB_REGION: "us-east-1"
+  
+  # Redis Configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  
+  # AWS Configuration
+  AWS_REGION: "us-east-1"
+  
+  # AI Provider
+  AI_PROVIDER: "gemini"
+  
+  # Feature Flags
+  ENABLE_VIDEO_GENERATION: "true"
+  ENABLE_TTS: "true"
+  ENABLE_SOCIAL_FEATURES: "true"
+  ENABLE_ANALYTICS: "true"
+  ENABLE_DEBUG_MODE: "false"
+  ENABLE_SWAGGER_UI: "false"
+  ENABLE_API_DOCS: "false"
+  ENABLE_METRICS: "true"
+  ENABLE_TRACING: "true"
+  
+  # Rate Limiting
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "100"
+  RATE_LIMIT_SKIP_SUCCESSFUL_REQUESTS: "false"
+  
+  # File Management
+  MAX_FILE_SIZE_MB: "50"
+  CLEANUP_INTERVAL_HOURS: "6"
+  UPLOAD_PATH: "/app/uploads"
+  OUTPUT_PATH: "/app/outputs"
+  
+  # Logging
+  LOG_LEVEL: "warn"
+  LOG_REQUESTS: "false"
+  LOG_ERRORS: "true"
+  LOG_DIR: "/app/logs"
+  
+  # CORS
+  CORS_ORIGIN: "https://whatifgenerator.com"
+  CORS_CREDENTIALS: "true"
+  ALLOWED_ORIGINS: "https://whatifgenerator.com,https://api.whatifgenerator.com"
+  
+  # Security Headers
+  HELMET_CSP_ENABLED: "true"
+  HELMET_HSTS_ENABLED: "true"
+  HELMET_NO_SNIFF: "true"
+  HELMET_XSS_FILTER: "true"
+  
+  # Health Check
+  HEALTH_CHECK_INTERVAL: "30000"
+  HEALTH_CHECK_TIMEOUT: "5000"
+  
+  # Cache
+  CACHE_TTL: "3600"
+  CACHE_MAX_ITEMS: "10000"
+  
+  # Monitoring
+  METRICS_PORT: "9090"
+  TRACE_SAMPLE_RATE: "0.1"
+  XRAY_ENABLED: "true"
+  XRAY_SAMPLE_RATE: "0.1"
+  CLOUDTRAIL_ENABLED: "true"
+  
+  # Session
+  SESSION_MAX_AGE: "86400000"
+  
+  # Email
+  EMAIL_FROM: "noreply@whatifgenerator.com"
+  EMAIL_SMTP_HOST: "smtp.gmail.com"
+  EMAIL_SMTP_PORT: "587"
+  
+  # API Documentation
+  API_DOCS_PATH: "/api-docs"
+  METRICS_PATH: "/metrics"
+  
+---
+# Secrets for What If Generator (Base64 encoded values)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: what-if-secrets
+  namespace: what-if-generator
+  labels:
+    app: what-if-generator
+type: Opaque
+data:
+  # Database passwords (Base64 encoded)
+  postgres-password: cG9zdGdyZXMxMjM=  # postgres123 - CHANGE THIS
+  
+  # JWT Secret (Base64 encoded) 
+  jwt-secret: Y2hhbmdlLXRoaXMtand0LXNlY3JldC1pbi1wcm9kdWN0aW9u  # CHANGE THIS
+  
+  # AI API Keys (Base64 encoded) - ADD YOUR KEYS
+  gemini-api-key: eW91ci1nZW1pbmktYXBpLWtleS1oZXJl  # CHANGE THIS
+  openai-api-key: eW91ci1vcGVuYWktYXBpLWtleS1oZXJl  # CHANGE THIS
+  anthropic-api-key: eW91ci1hbnRocm9waWMtYXBpLWtleS1oZXJl  # CHANGE THIS
+  
+  # Video Service API Keys (Base64 encoded) - ADD YOUR KEYS
+  runway-api-key: eW91ci1ydW53YXktYXBpLWtleQ==  # CHANGE THIS
+  pika-api-key: eW91ci1waWthLWFwaS1rZXk=  # CHANGE THIS
+  stability-api-key: eW91ci1zdGFiaWxpdHktYXBpLWtleQ==  # CHANGE THIS
+  
+  # Google Cloud Project ID (Base64 encoded)
+  google-cloud-project-id: eW91ci1nb29nbGUtY2xvdWQtcHJvamVjdC1pZA==  # CHANGE THIS
+  
+  # OAuth Credentials (Base64 encoded) - ADD YOUR CREDENTIALS
+  google-client-id: eW91ci1nb29nbGUtY2xpZW50LWlk  # CHANGE THIS
+  google-client-secret: eW91ci1nb29nbGUtY2xpZW50LXNlY3JldA==  # CHANGE THIS
+  facebook-app-id: eW91ci1mYWNlYm9vay1hcHAtaWQ=  # CHANGE THIS
+  facebook-app-secret: eW91ci1mYWNlYm9vay1hcHAtc2VjcmV0  # CHANGE THIS
+  
+  # Session Secret (Base64 encoded)
+  session-secret: Y2hhbmdlLXRoaXMtc2Vzc2lvbi1zZWNyZXQ=  # CHANGE THIS
+  
+  # Email Credentials (Base64 encoded) - ADD YOUR CREDENTIALS
+  email-user: eW91ci1lbWFpbC11c2Vy  # CHANGE THIS
+  email-password: eW91ci1lbWFpbC1wYXNzd29yZA==  # CHANGE THIS
+  
+  # AWS Credentials (if not using IAM roles)
+  aws-access-key-id: eW91ci1hd3MtYWNjZXNzLWtleS1pZA==  # CHANGE THIS
+  aws-secret-access-key: eW91ci1hd3Mtc2VjcmV0LWFjY2Vzcy1rZXk=  # CHANGE THIS
