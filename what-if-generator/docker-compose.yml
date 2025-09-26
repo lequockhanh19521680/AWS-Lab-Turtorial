@@ -62,15 +62,16 @@ services:
       context: ./services/user-service
       dockerfile: Dockerfile
     container_name: what-if-user-service
+    env_file:
+      - .env.development
     environment:
-      NODE_ENV: development
       PORT: 3001
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: what_if_users
-      DB_USER: postgres
-      DB_PASSWORD: postgres123
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
       REDIS_URL: redis://redis:6379
     ports:
       - "3001:3001"
@@ -88,10 +89,11 @@ services:
       context: ./services/generation-service
       dockerfile: Dockerfile
     container_name: what-if-generation-service
+    env_file:
+      - .env.development
     environment:
-      NODE_ENV: development
       PORT: 3002
-      GEMINI_API_KEY: your-gemini-api-key-here
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
       REDIS_URL: redis://redis:6379
       HISTORY_SERVICE_URL: http://history-service:3003
     ports:
@@ -109,11 +111,12 @@ services:
       context: ./services/history-service
       dockerfile: Dockerfile
     container_name: what-if-history-service
+    env_file:
+      - .env.development
     environment:
-      NODE_ENV: development
       PORT: 3003
       DYNAMODB_ENDPOINT: http://dynamodb:8000
-      DYNAMODB_REGION: us-east-1
+      DYNAMODB_REGION: ${DYNAMODB_REGION}
       REDIS_URL: redis://redis:6379
     ports:
       - "3003:3003"
@@ -131,11 +134,12 @@ services:
       context: ./services/sharing-service
       dockerfile: Dockerfile
     container_name: what-if-sharing-service
+    env_file:
+      - .env.development
     environment:
-      NODE_ENV: development
       PORT: 3004
       DYNAMODB_ENDPOINT: http://dynamodb:8000
-      DYNAMODB_REGION: us-east-1
+      DYNAMODB_REGION: ${DYNAMODB_REGION}
       REDIS_URL: redis://redis:6379
     ports:
       - "3004:3004"
@@ -153,31 +157,18 @@ services:
       context: ./services/video-service
       dockerfile: Dockerfile
     container_name: what-if-video-service
+    env_file:
+      - .env.development
     environment:
-      NODE_ENV: development
       PORT: 3005
       REDIS_URL: redis://redis:6379
       USER_SERVICE_URL: http://user-service:3001
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
-      # Google Cloud TTS Configuration
+      JWT_SECRET: ${JWT_SECRET}
       GOOGLE_APPLICATION_CREDENTIALS: /app/credentials/service-account-key.json
-      GOOGLE_CLOUD_PROJECT_ID: your-google-cloud-project-id
-      # Video Generation API Keys
-      RUNWAY_API_KEY: your-runway-api-key
-      PIKA_API_KEY: your-pika-api-key
-      STABILITY_API_KEY: your-stability-api-key
-      # Feature Flags
-      ENABLE_VIDEO_GENERATION: true
-      ENABLE_TTS: true
-      # Rate Limiting
-      RATE_LIMIT_WINDOW_MS: 900000
-      RATE_LIMIT_MAX_REQUESTS: 100
-      # File Management
-      MAX_FILE_SIZE_MB: 50
-      CLEANUP_INTERVAL_HOURS: 24
-      # Logging
-      LOG_LEVEL: info
-      LOG_REQUESTS: true
+      GOOGLE_CLOUD_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT_ID}
+      RUNWAY_API_KEY: ${RUNWAY_API_KEY}
+      PIKA_API_KEY: ${PIKA_API_KEY}
+      STABILITY_API_KEY: ${STABILITY_API_KEY}
     ports:
       - "3005:3005"
     depends_on:
@@ -198,13 +189,14 @@ services:
       context: ./services/social-service
       dockerfile: Dockerfile
     container_name: what-if-social-service
+    env_file:
+      - .env.development
     environment:
-      NODE_ENV: development
       PORT: 3006
       DYNAMODB_ENDPOINT: http://dynamodb:8000
-      DYNAMODB_REGION: us-east-1
+      DYNAMODB_REGION: ${DYNAMODB_REGION}
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_SECRET: ${JWT_SECRET}
       USER_SERVICE_URL: http://user-service:3001
     ports:
       - "3006:3006"
@@ -222,8 +214,9 @@ services:
       context: ./api-gateway
       dockerfile: Dockerfile
     container_name: what-if-api-gateway
+    env_file:
+      - .env.development
     environment:
-      NODE_ENV: development
       PORT: 3000
       USER_SERVICE_URL: http://user-service:3001
       GENERATION_SERVICE_URL: http://generation-service:3002
@@ -231,7 +224,7 @@ services:
       SHARING_SERVICE_URL: http://sharing-service:3004
       VIDEO_SERVICE_URL: http://video-service:3005
       SOCIAL_SERVICE_URL: http://social-service:3006
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_SECRET: ${JWT_SECRET}
       REDIS_URL: redis://redis:6379
     ports:
       - "3000:3000"
@@ -254,11 +247,14 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: what-if-frontend
+    env_file:
+      - .env.development
     environment:
-      REACT_APP_API_URL: http://localhost:3000
-      REACT_APP_ENVIRONMENT: development
+      PORT: 3007
+      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:3000}
+      REACT_APP_ENVIRONMENT: ${REACT_APP_ENVIRONMENT:-development}
     ports:
-      - "3005:3000"
+      - "3007:3007"
     depends_on:
       - api-gateway
     volumes:

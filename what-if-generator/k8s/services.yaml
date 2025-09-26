@@ -237,28 +237,21 @@ spec:
               key: NODE_ENV
         - name: PORT
           value: "3003"
-        - name: MONGODB_URI
-          value: "mongodb://$(MONGODB_USER):$(MONGODB_PASSWORD)@$(MONGODB_HOST):$(MONGODB_PORT)/what_if_history?authSource=admin"
-        - name: MONGODB_HOST
+        - name: DYNAMODB_ENDPOINT
           valueFrom:
             configMapKeyRef:
               name: what-if-config
-              key: MONGODB_HOST
-        - name: MONGODB_PORT
+              key: DYNAMODB_ENDPOINT
+        - name: DYNAMODB_REGION
           valueFrom:
             configMapKeyRef:
               name: what-if-config
-              key: MONGODB_PORT
-        - name: MONGODB_USER
+              key: DYNAMODB_REGION
+        - name: AWS_REGION
           valueFrom:
             configMapKeyRef:
               name: what-if-config
-              key: MONGODB_USER
-        - name: MONGODB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: what-if-secrets
-              key: mongodb-password
+              key: AWS_REGION
         - name: REDIS_URL
           value: "redis://$(REDIS_HOST):$(REDIS_PORT)"
         - name: REDIS_HOST
@@ -342,28 +335,21 @@ spec:
               key: NODE_ENV
         - name: PORT
           value: "3004"
-        - name: MONGODB_URI
-          value: "mongodb://$(MONGODB_USER):$(MONGODB_PASSWORD)@$(MONGODB_HOST):$(MONGODB_PORT)/what_if_sharing?authSource=admin"
-        - name: MONGODB_HOST
+        - name: DYNAMODB_ENDPOINT
           valueFrom:
             configMapKeyRef:
               name: what-if-config
-              key: MONGODB_HOST
-        - name: MONGODB_PORT
+              key: DYNAMODB_ENDPOINT
+        - name: DYNAMODB_REGION
           valueFrom:
             configMapKeyRef:
               name: what-if-config
-              key: MONGODB_PORT
-        - name: MONGODB_USER
+              key: DYNAMODB_REGION
+        - name: AWS_REGION
           valueFrom:
             configMapKeyRef:
               name: what-if-config
-              key: MONGODB_USER
-        - name: MONGODB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: what-if-secrets
-              key: mongodb-password
+              key: AWS_REGION
         - name: REDIS_URL
           value: "redis://$(REDIS_HOST):$(REDIS_PORT)"
         - name: REDIS_HOST
