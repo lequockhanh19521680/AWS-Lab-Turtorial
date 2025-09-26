@@ -17,6 +17,17 @@ services:
     networks:
       - what-if-network
 
+  # DynamoDB Local (replaces MongoDB)
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: what-if-dynamodb
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
+    ports:
+      - "8000:8000"
+    networks:
+      - what-if-network
+
+  # MongoDB (legacy - will be removed after migration)
   mongodb:
     image: mongo:7-jammy
     container_name: what-if-mongodb
@@ -31,6 +42,8 @@ services:
       - ./docker/mongodb/init.js:/docker-entrypoint-initdb.d/init.js
     networks:
       - what-if-network
+    profiles:
+      - legacy
 
   # Redis for caching and session management
   redis:
@@ -99,12 +112,13 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3003
-      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/what_if_history?authSource=admin
+      DYNAMODB_ENDPOINT: http://dynamodb:8000
+      DYNAMODB_REGION: us-east-1
       REDIS_URL: redis://redis:6379
     ports:
       - "3003:3003"
     depends_on:
-      - mongodb
+      - dynamodb
       - redis
     volumes:
       - ./services/history-service:/app
@@ -120,12 +134,13 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3004
-      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/what_if_sharing?authSource=admin
+      DYNAMODB_ENDPOINT: http://dynamodb:8000
+      DYNAMODB_REGION: us-east-1
       REDIS_URL: redis://redis:6379
     ports:
       - "3004:3004"
     depends_on:
-      - mongodb
+      - dynamodb
       - redis
     volumes:
       - ./services/sharing-service:/app
@@ -186,14 +201,15 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3006
-      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/what_if_social?authSource=admin
+      DYNAMODB_ENDPOINT: http://dynamodb:8000
+      DYNAMODB_REGION: us-east-1
       REDIS_URL: redis://redis:6379
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       USER_SERVICE_URL: http://user-service:3001
     ports:
       - "3006:3006"
     depends_on:
-      - mongodb
+      - dynamodb
       - redis
     volumes:
       - ./services/social-service:/app

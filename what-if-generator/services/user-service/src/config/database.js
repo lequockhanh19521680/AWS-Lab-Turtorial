@@ -1,44 +1,59 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+const { getPostgreSQLConfig, isAWSEnvironment, isDevelopment } = require('../../../../shared/config/database');
 
-const sequelize = new Sequelize({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'what_if_users',
-  username: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres123',
-  dialect: 'postgres',
-  logging: process.env.NODE_ENV === 'development' ? console.log : false,
-  pool: {
-    max: 10,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  },
-  define: {
-    timestamps: true,
-    underscored: true,
-    freezeTableName: true
-  }
-});
+/**
+ * User Service Database Configuration
+ * Supports multi-environment setup:
+ * - Development: Local PostgreSQL
+ * - Test/Production: AWS RDS PostgreSQL
+ */
+
+const dbConfig = getPostgreSQLConfig();
+const sequelize = new Sequelize(dbConfig);
 
 const connectDB = async () => {
   try {
     await sequelize.authenticate();
-    console.log('✅ PostgreSQL connected successfully');
     
-    // Sync database in development
-    if (process.env.NODE_ENV === 'development') {
+    const envInfo = isAWSEnvironment() ? 'AWS RDS' : 'Local';
+    console.log(`✅ PostgreSQL connected successfully (${envInfo})`);
+    
+    // Sync database in development only
+    if (isDevelopment()) {
       await sequelize.sync({ alter: true });
-      console.log('✅ Database synchronized');
+      console.log('✅ Database synchronized (development mode)');
+    } else {
+      console.log('ℹ️ Database sync skipped in production environment');
     }
   } catch (error) {
     console.error('❌ Unable to connect to PostgreSQL:', error);
+    
+    // Enhanced error logging for AWS environments
+    if (isAWSEnvironment()) {
+      console.error('🔍 AWS RDS Connection Debug Info:');
+      console.error(`   Host: ${dbConfig.host}`);
+      console.error(`   Port: ${dbConfig.port}`);
+      console.error(`   Database: ${dbConfig.database}`);
+      console.error(`   Username: ${dbConfig.username}`);
+      console.error(`   SSL Required: ${dbConfig.dialectOptions?.ssl?.require || false}`);
+    }
+    
     process.exit(1);
+  }
+};
+
+// Graceful shutdown
+const closeDB = async () => {
+  try {
+    await sequelize.close();
+    console.log('✅ PostgreSQL connection closed');
+  } catch (error) {
+    console.error('❌ Error closing PostgreSQL connection:', error);
   }
 };
 
 module.exports = {
   sequelize,
-  connectDB
+  connectDB,
+  closeDB
 };

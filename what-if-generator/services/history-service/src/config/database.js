@@ -1,51 +1,56 @@
-const mongoose = require('mongoose');
-require('dotenv').config();
+const { createTables, healthCheck, isDevelopment } = require('../../../../shared/config/dynamodb');
+
+/**
+ * History Service Database Configuration
+ * Migrated from MongoDB to DynamoDB for AWS integration
+ */
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://admin:admin123@localhost:27017/what_if_history?authSource=admin';
-    
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferMaxEntries: 0, // Disable mongoose buffering
-      bufferCommands: false, // Disable mongoose buffering
-    };
+    const envInfo = isDevelopment() ? 'Local DynamoDB' : 'AWS DynamoDB';
+    console.log(`🔧 Connecting to DynamoDB (${envInfo})...`);
 
-    const conn = await mongoose.connect(mongoURI, options);
+    // Create tables for local development
+    if (isDevelopment()) {
+      await createTables();
+      console.log('✅ DynamoDB tables created/verified');
+    }
 
-    console.log(`✅ MongoDB connected: ${conn.connection.host}`);
+    // Health check
+    const health = await healthCheck();
+    if (health.status === 'healthy') {
+      console.log(`✅ DynamoDB connected successfully (${envInfo})`);
+      console.log(`📊 Available tables: ${health.tables.join(', ')}`);
+    } else {
+      throw new Error(`DynamoDB health check failed: ${health.error}`);
+    }
 
-    // Handle connection events
-    mongoose.connection.on('error', (err) => {
-      console.error('❌ MongoDB connection error:', err);
-    });
-
-    mongoose.connection.on('disconnected', () => {
-      console.log('⚠️ MongoDB disconnected');
-    });
-
-    mongoose.connection.on('reconnected', () => {
-      console.log('✅ MongoDB reconnected');
-    });
-
-    return conn;
+    return health;
   } catch (error) {
-    console.error('❌ MongoDB connection failed:', error);
+    console.error('❌ DynamoDB connection failed:', error);
+    
+    if (isDevelopment()) {
+      console.error('🔍 Local DynamoDB Debug Info:');
+      console.error('   Make sure DynamoDB Local is running on port 8000');
+      console.error('   Start with: docker run -p 8000:8000 amazon/dynamodb-local');
+    } else {
+      console.error('🔍 AWS DynamoDB Debug Info:');
+      console.error('   Check AWS credentials and permissions');
+      console.error('   Verify tables exist in AWS console');
+    }
+    
     process.exit(1);
   }
 };
 
-// Graceful close
+// Graceful close (DynamoDB doesn't require explicit connection closing)
 const closeDB = async () => {
   try {
-    await mongoose.connection.close();
-    console.log('✅ MongoDB connection closed');
+    console.log('✅ DynamoDB connection closed');
+    return { success: true };
   } catch (error) {
-    console.error('❌ Error closing MongoDB connection:', error);
+    console.error('❌ Error closing DynamoDB connection:', error);
+    throw error;
   }
 };
 

@@ -1,39 +1,49 @@
-const mongoose = require('mongoose');
+const { createTables, healthCheck, isDevelopment } = require('../../../../shared/config/dynamodb');
 const logger = require('./logger');
+
+/**
+ * Social Service Database Configuration
+ * Migrated from MongoDB to DynamoDB for AWS integration
+ */
 
 const connectDatabase = async () => {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://admin:admin123@localhost:27017/what_if_social?authSource=admin';
-    
-    await mongoose.connect(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
+    const envInfo = isDevelopment() ? 'Local DynamoDB' : 'AWS DynamoDB';
+    logger.info(`Connecting to DynamoDB (${envInfo})...`);
 
-    logger.info('Connected to MongoDB', {
-      host: mongoose.connection.host,
-      port: mongoose.connection.port,
-      database: mongoose.connection.name
-    });
+    // Create tables for local development
+    if (isDevelopment()) {
+      await createTables();
+      logger.info('DynamoDB tables created/verified');
+    }
 
-    // Handle connection events
-    mongoose.connection.on('error', (error) => {
-      logger.error('MongoDB connection error', { error: error.message });
-    });
+    // Health check
+    const health = await healthCheck();
+    if (health.status === 'healthy') {
+      logger.info(`DynamoDB connected successfully (${envInfo})`, {
+        tables: health.tables,
+        environment: health.environment
+      });
+    } else {
+      throw new Error(`DynamoDB health check failed: ${health.error}`);
+    }
 
-    mongoose.connection.on('disconnected', () => {
-      logger.warn('MongoDB disconnected');
-    });
-
-    mongoose.connection.on('reconnected', () => {
-      logger.info('MongoDB reconnected');
-    });
-
+    return health;
   } catch (error) {
-    logger.error('Failed to connect to MongoDB', { error: error.message });
+    logger.error('DynamoDB connection failed', { error: error.message });
+    
+    if (isDevelopment()) {
+      logger.error('Local DynamoDB Debug Info', {
+        message: 'Make sure DynamoDB Local is running on port 8000',
+        command: 'docker run -p 8000:8000 amazon/dynamodb-local'
+      });
+    } else {
+      logger.error('AWS DynamoDB Debug Info', {
+        message: 'Check AWS credentials and permissions',
+        suggestion: 'Verify tables exist in AWS console'
+      });
+    }
+    
     throw error;
   }
 };
