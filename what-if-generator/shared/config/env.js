@@ -89,8 +89,8 @@ class EnvironmentLoader {
       MONGODB_USER: this.get('MONGODB_USER', 'admin'),
       MONGODB_PASSWORD: this.get('MONGODB_PASSWORD', 'admin123'),
       
-      // Redis
-      REDIS_URL: this.getRequired('REDIS_URL'),
+      // Redis Configuration
+      REDIS_URL: this.get('REDIS_URL'),
       REDIS_HOST: this.get('REDIS_HOST', 'localhost'),
       REDIS_PORT: this.getNumber('REDIS_PORT', 6379),
       REDIS_PASSWORD: this.get('REDIS_PASSWORD'),
@@ -174,18 +174,45 @@ class EnvironmentLoader {
       ENABLE_TRACING: this.getBoolean('ENABLE_TRACING', true),
       TRACE_SAMPLE_RATE: this.getNumber('TRACE_SAMPLE_RATE', 0.1),
       
-      // AWS (Production only)
-      AWS_REGION: this.get('AWS_REGION'),
+      // AWS Configuration
+      AWS_REGION: this.get('AWS_REGION', 'us-east-1'),
       AWS_ACCESS_KEY_ID: this.get('AWS_ACCESS_KEY_ID'),
       AWS_SECRET_ACCESS_KEY: this.get('AWS_SECRET_ACCESS_KEY'),
       
-      // S3 (Production only)
+      // RDS PostgreSQL Configuration (Test/Production)
+      RDS_POSTGRES_HOST: this.get('RDS_POSTGRES_HOST'),
+      RDS_POSTGRES_PORT: this.getNumber('RDS_POSTGRES_PORT', 5432),
+      RDS_POSTGRES_DB: this.get('RDS_POSTGRES_DB'),
+      RDS_POSTGRES_USER: this.get('RDS_POSTGRES_USER'),
+      RDS_POSTGRES_PASSWORD: this.get('RDS_POSTGRES_PASSWORD'),
+      
+      // DynamoDB Configuration
+      DYNAMODB_ENDPOINT: this.get('DYNAMODB_ENDPOINT'), // For local development
+      DYNAMODB_REGION: this.get('DYNAMODB_REGION', 'us-east-1'),
+      
+      // ElastiCache Redis Configuration (Test/Production)
+      ELASTICACHE_REDIS_HOST: this.get('ELASTICACHE_REDIS_HOST'),
+      ELASTICACHE_REDIS_PORT: this.getNumber('ELASTICACHE_REDIS_PORT', 6379),
+      ELASTICACHE_REDIS_PASSWORD: this.get('ELASTICACHE_REDIS_PASSWORD'),
+      
+      // S3 Configuration
       S3_BUCKET: this.get('S3_BUCKET'),
-      S3_REGION: this.get('S3_REGION'),
+      S3_REGION: this.get('S3_REGION', 'us-east-1'),
       S3_ACCESS_KEY_ID: this.get('S3_ACCESS_KEY_ID'),
       S3_SECRET_ACCESS_KEY: this.get('S3_SECRET_ACCESS_KEY'),
       
-      // CDN (Production only)
+      // CloudWatch Configuration
+      CLOUDWATCH_GROUP: this.get('CLOUDWATCH_GROUP'),
+      CLOUDWATCH_STREAM: this.get('CLOUDWATCH_STREAM'),
+      
+      // X-Ray Configuration
+      XRAY_ENABLED: this.getBoolean('XRAY_ENABLED', true),
+      XRAY_SAMPLE_RATE: this.getNumber('XRAY_SAMPLE_RATE', 0.1),
+      
+      // CloudTrail Configuration
+      CLOUDTRAIL_ENABLED: this.getBoolean('CLOUDTRAIL_ENABLED', true),
+      
+      // CDN Configuration
       CDN_URL: this.get('CDN_URL'),
       STATIC_ASSETS_URL: this.get('STATIC_ASSETS_URL'),
     };
@@ -266,6 +293,28 @@ class EnvironmentLoader {
 
     if (config.ENABLE_VIDEO_GENERATION && !config.RUNWAY_API_KEY && !config.PIKA_API_KEY && !config.STABILITY_API_KEY) {
       errors.push('At least one video API key is required when ENABLE_VIDEO_GENERATION is true');
+    }
+
+    // Validate AWS configuration for test/production environments
+    if (config.NODE_ENV === 'test' || config.NODE_ENV === 'production') {
+      if (!config.AWS_REGION) {
+        errors.push('AWS_REGION is required for test/production environments');
+      }
+      if (!config.RDS_POSTGRES_HOST) {
+        errors.push('RDS_POSTGRES_HOST is required for test/production environments');
+      }
+      if (!config.RDS_POSTGRES_DB) {
+        errors.push('RDS_POSTGRES_DB is required for test/production environments');
+      }
+      if (!config.RDS_POSTGRES_USER) {
+        errors.push('RDS_POSTGRES_USER is required for test/production environments');
+      }
+      if (!config.RDS_POSTGRES_PASSWORD) {
+        errors.push('RDS_POSTGRES_PASSWORD is required for test/production environments');
+      }
+      if (!config.ELASTICACHE_REDIS_HOST) {
+        errors.push('ELASTICACHE_REDIS_HOST is required for test/production environments');
+      }
     }
 
     if (errors.length > 0) {

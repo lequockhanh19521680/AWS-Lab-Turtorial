@@ -1,23 +1,11 @@
-const redis = require('redis');
-require('dotenv').config();
+// This file has been replaced with shared Redis configuration
+// Keeping this file for backward compatibility during migration
 
-let client;
+const { connect, getClient, healthCheck } = require('../../../../shared/config/redis');
 
 const connectRedis = async () => {
   try {
-    client = redis.createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379'
-    });
-
-    client.on('error', (err) => {
-      console.error('❌ Redis Client Error:', err);
-    });
-
-    client.on('connect', () => {
-      console.log('✅ Redis connected successfully');
-    });
-
-    await client.connect();
+    const client = await connect();
     return client;
   } catch (error) {
     console.error('❌ Redis connection failed:', error);
@@ -26,10 +14,7 @@ const connectRedis = async () => {
 };
 
 const getRedisClient = () => {
-  if (!client) {
-    throw new Error('Redis client not initialized. Call connectRedis() first.');
-  }
-  return client;
+  return getClient();
 };
 
 module.exports = {
