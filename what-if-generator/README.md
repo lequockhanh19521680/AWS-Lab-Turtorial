@@ -150,18 +150,26 @@ GET /api/achievements
 
 ## 🚀 AWS Deployment
 
-### Infrastructure as Code
+### 💰 Free Tier Deployment (Under $50/month)
 ```bash
-# Deploy infrastructure
+# Deploy optimized infrastructure for free tier
+aws cloudformation deploy \
+  --template-file aws/infrastructure-free-tier.yaml \
+  --stack-name what-if-generator-freetier \
+  --parameter-overrides Environment=development \
+  --capabilities CAPABILITY_IAM
+
+# See docs/FREE_TIER_DEPLOYMENT.md for complete guide
+```
+
+### 🏭 Production Infrastructure
+```bash
+# Deploy full production infrastructure
 aws cloudformation deploy \
   --template-file aws/infrastructure.yaml \
   --stack-name what-if-generator-production \
   --parameter-overrides Environment=production \
   --capabilities CAPABILITY_IAM
-
-# Deploy with CDK
-cd aws/cdk
-npm run deploy:prod
 ```
 
 ### CI/CD Pipeline
@@ -256,15 +264,32 @@ what-if-generator/
 │   ├── video-service/    # Video generation
 │   └── social-service/   # Social features
 ├── frontend/             # Next.js frontend
-├── aws/                  # AWS CloudFormation/CDK
-│   ├── infrastructure.yaml # Infrastructure template
-│   ├── cicd-pipeline.yaml  # CI/CD pipeline
-│   └── cdk/              # CDK infrastructure
+├── aws/                  # AWS Infrastructure
+│   ├── infrastructure-free-tier.yaml # Free tier optimized (<$50/month)
+│   ├── infrastructure.yaml           # Full production setup
+│   └── cicd-pipeline.yaml           # CI/CD pipeline
 ├── scripts/              # Utility scripts
 ├── docker/               # Database init scripts
-├── k8s/                  # Kubernetes configs
-└── docs/                 # Documentation
+└── docs/                 # Essential Documentation
+    ├── ARCHITECTURE.md           # System architecture
+    ├── API.md                   # API documentation
+    ├── AWS_OBSERVABILITY.md     # Monitoring guide
+    └── FREE_TIER_DEPLOYMENT.md  # Cost-optimized deployment
 ```
+
+## 💰 Cost Optimization
+
+### Free Tier Setup (Under $50/month)
+- **Target Cost**: $35-45 USD/month
+- **Key Savings**: Single AZ, minimal resources, Fargate Spot
+- **Services**: ECS Fargate, RDS t3.micro, DynamoDB, S3
+- **Guide**: See `docs/FREE_TIER_DEPLOYMENT.md`
+
+### Production Setup
+- **High Availability**: Multi-AZ deployment
+- **Auto Scaling**: Based on demand
+- **Cost**: $200-500 USD/month depending on usage
+- **Enterprise Features**: Full monitoring, backups, security
 
 ## 🎉 Recent Improvements
 
