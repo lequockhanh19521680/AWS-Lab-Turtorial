@@ -63,7 +63,7 @@ services:
       dockerfile: Dockerfile
     container_name: what-if-user-service
     env_file:
-      - .env.development
+      - .env.dev
     environment:
       PORT: 3001
       DB_HOST: postgres
@@ -90,7 +90,7 @@ services:
       dockerfile: Dockerfile
     container_name: what-if-generation-service
     env_file:
-      - .env.development
+      - .env.dev
     environment:
       PORT: 3002
       GEMINI_API_KEY: ${GEMINI_API_KEY}
@@ -112,7 +112,7 @@ services:
       dockerfile: Dockerfile
     container_name: what-if-history-service
     env_file:
-      - .env.development
+      - .env.dev
     environment:
       PORT: 3003
       DYNAMODB_ENDPOINT: http://dynamodb:8000
@@ -135,7 +135,7 @@ services:
       dockerfile: Dockerfile
     container_name: what-if-sharing-service
     env_file:
-      - .env.development
+      - .env.dev
     environment:
       PORT: 3004
       DYNAMODB_ENDPOINT: http://dynamodb:8000
@@ -158,7 +158,7 @@ services:
       dockerfile: Dockerfile
     container_name: what-if-video-service
     env_file:
-      - .env.development
+      - .env.dev
     environment:
       PORT: 3005
       REDIS_URL: redis://redis:6379
@@ -190,7 +190,7 @@ services:
       dockerfile: Dockerfile
     container_name: what-if-social-service
     env_file:
-      - .env.development
+      - .env.dev
     environment:
       PORT: 3006
       DYNAMODB_ENDPOINT: http://dynamodb:8000
@@ -215,7 +215,7 @@ services:
       dockerfile: Dockerfile
     container_name: what-if-api-gateway
     env_file:
-      - .env.development
+      - .env.dev
     environment:
       PORT: 3000
       USER_SERVICE_URL: http://user-service:3001
@@ -248,13 +248,14 @@ services:
       dockerfile: Dockerfile
     container_name: what-if-frontend
     env_file:
-      - .env.development
+      - .env.dev
     environment:
-      PORT: 3007
-      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:3000}
-      REACT_APP_ENVIRONMENT: ${REACT_APP_ENVIRONMENT:-development}
+      PORT: 8080
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      NODE_ENV: ${NODE_ENV:-development}
     ports:
-      - "3007:3007"
+      - "8080:8080"
     depends_on:
       - api-gateway
     volumes:
