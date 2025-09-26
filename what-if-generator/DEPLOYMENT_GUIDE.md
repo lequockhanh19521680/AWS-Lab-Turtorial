@@ -19,6 +19,13 @@ npm run install:all
 # Development (local)
 npm run deploy:dev
 
+# Free Tier (AWS - Under $50/month) 💰
+aws cloudformation deploy \
+  --template-file aws/infrastructure-free-tier.yaml \
+  --stack-name what-if-generator-freetier \
+  --parameter-overrides Environment=development \
+  --capabilities CAPABILITY_IAM
+
 # Test environment (AWS)
 npm run deploy:test
 
@@ -47,6 +54,14 @@ npm run deploy:prod
 - **Backend**: Port 3000
 - **Database**: Local PostgreSQL hoặc Docker
 - **Auto-seed**: Tự động tạo dữ liệu mẫu
+
+### 💰 Free Tier (AWS - Under $50/month)
+- **Cost**: $35-45 USD/month
+- **RDS**: PostgreSQL t3.micro (single AZ)
+- **DynamoDB**: Provisioned capacity (5 RCU/WCU)
+- **ECS**: Single Fargate Spot instance (256 CPU, 512MB)
+- **S3**: Static assets (5GB limit)
+- **Guide**: See `docs/FREE_TIER_DEPLOYMENT.md`
 
 ### Test Environment (AWS)
 - **RDS**: PostgreSQL riêng cho test
@@ -268,6 +283,18 @@ aws rds modify-db-instance --db-instance-identifier prod-db --db-instance-class 
 ```
 
 ## 💰 Cost Optimization
+
+### 🆓 Free Tier Strategy (Under $50/month)
+- **Infrastructure**: `aws/infrastructure-free-tier.yaml`
+- **Target Cost**: $35-45 USD/month
+- **Key Savings**: 
+  - Single AZ deployment (no Multi-AZ costs)
+  - Fargate Spot instances (70% savings)
+  - t3.micro RDS (free tier eligible)
+  - Minimal resources (256 CPU, 512MB RAM)
+  - Single NAT Gateway
+- **Monitoring**: CloudWatch billing alerts at $40
+- **Complete Guide**: `docs/FREE_TIER_DEPLOYMENT.md`
 
 ### Development
 - **Fargate Spot**: 70% cost savings
