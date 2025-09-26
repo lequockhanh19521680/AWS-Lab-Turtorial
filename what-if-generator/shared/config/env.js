@@ -73,7 +73,8 @@ class EnvironmentLoader {
       HISTORY_SERVICE_PORT: this.getNumber('HISTORY_SERVICE_PORT', 3003),
       SHARING_SERVICE_PORT: this.getNumber('SHARING_SERVICE_PORT', 3004),
       VIDEO_SERVICE_PORT: this.getNumber('VIDEO_SERVICE_PORT', 3005),
-      FRONTEND_PORT: this.getNumber('FRONTEND_PORT', 3005),
+      SOCIAL_SERVICE_PORT: this.getNumber('SOCIAL_SERVICE_PORT', 3006),
+      FRONTEND_PORT: this.getNumber('FRONTEND_PORT', 3007),
       
       // Database
       POSTGRES_DB: this.getRequired('POSTGRES_DB'),
@@ -151,7 +152,7 @@ class EnvironmentLoader {
       LOG_DIR: this.get('LOG_DIR', './logs'),
       
       // CORS
-      CORS_ORIGIN: this.get('CORS_ORIGIN', 'http://localhost:3005'),
+      CORS_ORIGIN: this.get('CORS_ORIGIN', 'http://localhost:3007'),
       CORS_CREDENTIALS: this.getBoolean('CORS_CREDENTIALS', true),
       
       // Security

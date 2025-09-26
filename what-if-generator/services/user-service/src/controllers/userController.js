@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const { Op } = require('sequelize');
+const logger = require('../config/logger');
 
 /**
  * Lấy thông tin profile người dùng hiện tại
@@ -15,7 +16,7 @@ const getProfile = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get profile error:', error);
+    logger.error('Get profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Lỗi hệ thống'

@@ -91,7 +91,7 @@ app.use(helmet({
 app.use(compression());
 
 // CORS configuration
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3005').split(',');
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3007').split(',');
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, etc.)
