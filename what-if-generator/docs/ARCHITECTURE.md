@@ -1,17 +1,51 @@
-# System Architecture
+# Production Architecture - AWS Best Practices
 
 ## Overview
 
-What If Generator is a microservices-based AI platform for generating interactive scenarios with a modern, cloud-native architecture designed for scalability and reliability.
+What If Generator được thiết kế theo AWS Well-Architected Framework với high availability, fault tolerance và auto-scaling capabilities cho production environment.
 
-## Architecture Principles
+## AWS Well-Architected Framework Compliance
 
-- **Microservices**: Each service has a single responsibility with clear boundaries
-- **API Gateway Pattern**: Central entry point for all client requests with routing, authentication, and rate limiting
-- **Database per Service**: Each service owns its data with appropriate database technology
-- **Cloud-Native**: Designed for AWS with infrastructure as code
-- **Security-First**: Built-in security at every layer
-- **Observability**: Comprehensive monitoring, logging, and tracing
+### 1. Security Pillar
+- **VPC Isolation**: Private subnets cho services
+- **Security Groups**: Least privilege network access
+- **Secrets Management**: AWS Secrets Manager
+- **Encryption**: At rest và in transit
+- **IAM Roles**: Minimal permissions
+
+### 2. Reliability Pillar
+- **Multi-AZ Deployment**: Cross-AZ fault tolerance
+- **Auto Scaling**: ECS services auto-scaling
+- **Health Checks**: Comprehensive monitoring
+- **Backup Strategy**: Automated database backups
+- **Circuit Breakers**: Service resilience
+
+### 3. Performance Efficiency
+- **CDN**: CloudFront global distribution
+- **Caching**: Redis ElastiCache
+- **Auto Scaling**: CPU/memory based scaling
+- **Load Balancing**: Application Load Balancer
+- **Connection Pooling**: Database optimization
+
+### 4. Cost Optimization
+- **Fargate Spot**: Cost-effective containers
+- **Reserved Instances**: Predictable workloads
+- **S3 Lifecycle**: Storage optimization
+- **Auto Scaling**: Right-sizing resources
+- **Monitoring**: Cost visibility
+
+### 5. Operational Excellence
+- **Infrastructure as Code**: CloudFormation/CDK
+- **CI/CD Pipeline**: Automated deployments
+- **Monitoring**: CloudWatch observability
+- **Logging**: Centralized log management
+- **Alerting**: Proactive issue detection
+
+### 6. Sustainability
+- **Resource Efficiency**: Optimal instance sizing
+- **Auto Scaling**: Dynamic resource allocation
+- **Serverless**: Fargate container orchestration
+- **Green Regions**: Renewable energy AWS regions
 
 ## Corrected Service Architecture
 

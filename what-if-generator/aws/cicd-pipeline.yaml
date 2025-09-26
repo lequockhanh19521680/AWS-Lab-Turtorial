@@ -1,0 +1,677 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'What If Generator - CI/CD Pipeline with DVA Best Practices'
+
+Parameters:
+  GitHubRepo:
+    Type: String
+    Default: 'what-if-generator'
+    Description: 'GitHub repository name'
+  
+  GitHubOwner:
+    Type: String
+    Default: 'your-github-username'
+    Description: 'GitHub repository owner'
+  
+  GitHubToken:
+    Type: String
+    NoEcho: true
+    Description: 'GitHub personal access token'
+    
+  DockerHubUsername:
+    Type: String
+    Description: 'DockerHub username for image push'
+    
+  DockerHubPassword:
+    Type: String
+    NoEcho: true
+    Description: 'DockerHub password'
+
+Resources:
+  # S3 Bucket for Pipeline Artifacts
+  PipelineArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-pipeline-artifacts'
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # ECR Repositories for each service
+  APIGatewayECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: what-if-generator/api-gateway
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 7
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  UserServiceECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: what-if-generator/user-service
+      ImageScanningConfiguration:
+        ScanOnPush: true
+
+  GenerationServiceECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: what-if-generator/generation-service
+      ImageScanningConfiguration:
+        ScanOnPush: true
+
+  HistoryServiceECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: what-if-generator/history-service
+      ImageScanningConfiguration:
+        ScanOnPush: true
+
+  SharingServiceECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: what-if-generator/sharing-service
+      ImageScanningConfiguration:
+        ScanOnPush: true
+
+  VideoServiceECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: what-if-generator/video-service
+      ImageScanningConfiguration:
+        ScanOnPush: true
+
+  SocialServiceECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: what-if-generator/social-service
+      ImageScanningConfiguration:
+        ScanOnPush: true
+
+  FrontendECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: what-if-generator/frontend
+      ImageScanningConfiguration:
+        ScanOnPush: true
+
+  # IAM Role for CodeBuild
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildServicePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                Resource: !Sub '${PipelineArtifactsBucket}/*'
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:GetAuthorizationToken
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+                  - ecr:PutImage
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecs:DescribeServices
+                  - ecs:UpdateService
+                  - ecs:DescribeTaskDefinition
+                  - ecs:RegisterTaskDefinition
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: '*'
+
+  # IAM Role for CodePipeline
+  CodePipelineServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodePipelineServicePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                  - s3:GetBucketVersioning
+                Resource:
+                  - !Sub '${PipelineArtifactsBucket}'
+                  - !Sub '${PipelineArtifactsBucket}/*'
+              - Effect: Allow
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - codedeploy:CreateDeployment
+                  - codedeploy:GetApplication
+                  - codedeploy:GetApplicationRevision
+                  - codedeploy:GetDeployment
+                  - codedeploy:GetDeploymentConfig
+                  - codedeploy:RegisterApplicationRevision
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecs:DescribeServices
+                  - ecs:UpdateService
+                Resource: '*'
+
+  # CodeBuild Project for Tests
+  TestProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${AWS::StackName}-test'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/standard:7.0
+        PrivilegedMode: true
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            pre_build:
+              commands:
+                - echo Logging in to Amazon ECR...
+                - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+                - echo Installing dependencies...
+                - npm install
+            build:
+              commands:
+                - echo Running unit tests...
+                - npm run test:unit
+                - echo Running integration tests...
+                - npm run test:integration
+                - echo Running linting...
+                - npm run lint
+                - echo Running security audit...
+                - npm audit --audit-level moderate
+            post_build:
+              commands:
+                - echo Tests completed on `date`
+          artifacts:
+            files:
+              - '**/*'
+
+  # CodeBuild Project for Building and Pushing Images
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${AWS::StackName}-build'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/standard:7.0
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+          - Name: IMAGE_TAG
+            Value: latest
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            pre_build:
+              commands:
+                - echo Logging in to Amazon ECR...
+                - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+                - REPOSITORY_PREFIX=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/what-if-generator
+                - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+                - IMAGE_TAG=${COMMIT_HASH:=latest}
+            build:
+              commands:
+                - echo Build started on `date`
+                - echo Building and pushing Docker images...
+                - |
+                  services=("api-gateway" "user-service" "generation-service" "history-service" "sharing-service" "video-service" "social-service" "frontend")
+                  for service in "${services[@]}"; do
+                    echo "Building $service..."
+                    if [ "$service" = "frontend" ]; then
+                      docker build -t $REPOSITORY_PREFIX/$service:$IMAGE_TAG ./frontend/
+                    elif [ "$service" = "api-gateway" ]; then
+                      docker build -t $REPOSITORY_PREFIX/$service:$IMAGE_TAG ./api-gateway/
+                    else
+                      docker build -t $REPOSITORY_PREFIX/$service:$IMAGE_TAG ./services/$service/
+                    fi
+                    docker push $REPOSITORY_PREFIX/$service:$IMAGE_TAG
+                    echo "Pushed $service:$IMAGE_TAG"
+                  done
+            post_build:
+              commands:
+                - echo Build completed on `date`
+                - echo Creating image definitions file...
+                - |
+                  echo '[' > imagedefinitions.json
+                  services=("api-gateway" "user-service" "generation-service" "history-service" "sharing-service" "video-service" "social-service")
+                  for i in "${!services[@]}"; do
+                    service="${services[$i]}"
+                    echo "  {" >> imagedefinitions.json
+                    echo "    \"name\": \"$service\"," >> imagedefinitions.json
+                    echo "    \"imageUri\": \"$REPOSITORY_PREFIX/$service:$IMAGE_TAG\"" >> imagedefinitions.json
+                    if [ $i -lt $((${#services[@]} - 1)) ]; then
+                      echo "  }," >> imagedefinitions.json
+                    else
+                      echo "  }" >> imagedefinitions.json
+                    fi
+                  done
+                  echo ']' >> imagedefinitions.json
+                - cat imagedefinitions.json
+          artifacts:
+            files:
+              - imagedefinitions.json
+
+  # CodeDeploy Application
+  CodeDeployApplication:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ApplicationName: !Sub '${AWS::StackName}-app'
+      ComputePlatform: ECS
+
+  # CodeDeploy Deployment Group for Development
+  DevDeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      ApplicationName: !Ref CodeDeployApplication
+      DeploymentGroupName: development
+      ServiceRoleArn: !Sub 'arn:aws:iam::${AWS::AccountId}:role/CodeDeployServiceRole'
+      AutoRollbackConfiguration:
+        Enabled: true
+        Events:
+          - DEPLOYMENT_FAILURE
+          - DEPLOYMENT_STOP_ON_ALARM
+      BlueGreenDeploymentConfiguration:
+        TerminateBlueInstancesOnDeploymentSuccess:
+          Action: TERMINATE
+          TerminationWaitTimeInMinutes: 5
+        DeploymentReadyOption:
+          ActionOnTimeout: CONTINUE_DEPLOYMENT
+        GreenFleetProvisioningOption:
+          Action: COPY_AUTO_SCALING_GROUP
+
+  # CodeDeploy Deployment Group for Test
+  TestDeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      ApplicationName: !Ref CodeDeployApplication
+      DeploymentGroupName: test
+      ServiceRoleArn: !Sub 'arn:aws:iam::${AWS::AccountId}:role/CodeDeployServiceRole'
+      AutoRollbackConfiguration:
+        Enabled: true
+        Events:
+          - DEPLOYMENT_FAILURE
+          - DEPLOYMENT_STOP_ON_ALARM
+
+  # CodeDeploy Deployment Group for Production
+  ProdDeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      ApplicationName: !Ref CodeDeployApplication
+      DeploymentGroupName: production
+      ServiceRoleArn: !Sub 'arn:aws:iam::${AWS::AccountId}:role/CodeDeployServiceRole'
+      AutoRollbackConfiguration:
+        Enabled: true
+        Events:
+          - DEPLOYMENT_FAILURE
+          - DEPLOYMENT_STOP_ON_ALARM
+      BlueGreenDeploymentConfiguration:
+        TerminateBlueInstancesOnDeploymentSuccess:
+          Action: TERMINATE
+          TerminationWaitTimeInMinutes: 30
+        DeploymentReadyOption:
+          ActionOnTimeout: STOP_DEPLOYMENT
+        GreenFleetProvisioningOption:
+          Action: COPY_AUTO_SCALING_GROUP
+
+  # SNS Topic for Pipeline Notifications
+  PipelineNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${AWS::StackName}-pipeline-notifications'
+      DisplayName: 'What If Generator Pipeline Notifications'
+
+  # Pipeline for Development Environment
+  DevPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub '${AWS::StackName}-dev'
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref PipelineArtifactsBucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: '1'
+              Configuration:
+                Owner: !Ref GitHubOwner
+                Repo: !Ref GitHubRepo
+                Branch: develop
+                OAuthToken: !Ref GitHubToken
+                PollForSourceChanges: false
+              OutputArtifacts:
+                - Name: SourceOutput
+        
+        - Name: Test
+          Actions:
+            - Name: UnitTest
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref TestProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: TestOutput
+        
+        - Name: Build
+          Actions:
+            - Name: BuildImages
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref BuildProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+        
+        - Name: DeployDev
+          Actions:
+            - Name: DeployToDevelopment
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: ECS
+                Version: '1'
+              Configuration:
+                ClusterName: what-if-generator-dev
+                ServiceName: api-gateway-service
+                FileName: imagedefinitions.json
+              InputArtifacts:
+                - Name: BuildOutput
+
+  # Pipeline for Test Environment
+  TestPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub '${AWS::StackName}-test'
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref PipelineArtifactsBucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: '1'
+              Configuration:
+                Owner: !Ref GitHubOwner
+                Repo: !Ref GitHubRepo
+                Branch: test
+                OAuthToken: !Ref GitHubToken
+                PollForSourceChanges: false
+              OutputArtifacts:
+                - Name: SourceOutput
+        
+        - Name: Test
+          Actions:
+            - Name: RunTests
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref TestProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: TestOutput
+        
+        - Name: Build
+          Actions:
+            - Name: BuildImages
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref BuildProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+        
+        - Name: DeployTest
+          Actions:
+            - Name: DeployToTest
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: ECS
+                Version: '1'
+              Configuration:
+                ClusterName: what-if-generator-test
+                ServiceName: api-gateway-service
+                FileName: imagedefinitions.json
+              InputArtifacts:
+                - Name: BuildOutput
+
+  # Pipeline for Production Environment (with Manual Approval)
+  ProdPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub '${AWS::StackName}-prod'
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref PipelineArtifactsBucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: '1'
+              Configuration:
+                Owner: !Ref GitHubOwner
+                Repo: !Ref GitHubRepo
+                Branch: main
+                OAuthToken: !Ref GitHubToken
+                PollForSourceChanges: false
+              OutputArtifacts:
+                - Name: SourceOutput
+        
+        - Name: Test
+          Actions:
+            - Name: RunTests
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref TestProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: TestOutput
+        
+        - Name: Build
+          Actions:
+            - Name: BuildImages
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref BuildProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+        
+        - Name: ManualApproval
+          Actions:
+            - Name: ApprovalRequired
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: '1'
+              Configuration:
+                NotificationArn: !Ref PipelineNotificationTopic
+                CustomData: 'Please review and approve deployment to production environment'
+        
+        - Name: DeployProd
+          Actions:
+            - Name: DeployToProduction
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CodeDeploy
+                Version: '1'
+              Configuration:
+                ApplicationName: !Ref CodeDeployApplication
+                DeploymentGroupName: production
+              InputArtifacts:
+                - Name: BuildOutput
+
+  # CloudWatch Event Rule for GitHub Webhooks
+  GitHubWebhookRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: 'Trigger pipeline on GitHub push'
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - CodeCommit Repository State Change
+        detail:
+          event:
+            - repositoryStateChange
+      State: ENABLED
+      Targets:
+        - Arn: !Sub 'arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:pipeline/${DevPipeline}'
+          Id: DevPipelineTarget
+          RoleArn: !GetAtt CodePipelineServiceRole.Arn
+
+Outputs:
+  PipelineArtifactsBucket:
+    Description: 'S3 Bucket for Pipeline Artifacts'
+    Value: !Ref PipelineArtifactsBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-ArtifactsBucket'
+
+  DevPipelineName:
+    Description: 'Development Pipeline Name'
+    Value: !Ref DevPipeline
+    Export:
+      Name: !Sub '${AWS::StackName}-DevPipeline'
+
+  TestPipelineName:
+    Description: 'Test Pipeline Name'
+    Value: !Ref TestPipeline
+    Export:
+      Name: !Sub '${AWS::StackName}-TestPipeline'
+
+  ProdPipelineName:
+    Description: 'Production Pipeline Name'
+    Value: !Ref ProdPipeline
+    Export:
+      Name: !Sub '${AWS::StackName}-ProdPipeline'
+
+  ECRRepositoryPrefix:
+    Description: 'ECR Repository Prefix'
+    Value: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/what-if-generator'
+    Export:
+      Name: !Sub '${AWS::StackName}-ECRPrefix'

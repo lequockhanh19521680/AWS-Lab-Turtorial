@@ -1,8 +1,32 @@
-# Deployment Guide
+# Quick Deployment Reference
 
-## Overview
+> Tài liệu tham khảo nhanh cho deployment. Xem DEPLOYMENT_GUIDE.md cho hướng dẫn chi tiết.
 
-This guide covers deploying What If Generator to AWS using best practices from AWS Developer Associate (DVA) and Solutions Architect Associate (SAA) certifications.
+## Quick Commands
+
+### Local Development
+```bash
+# Setup and run locally
+./scripts/setup-local.sh
+docker-compose up -d
+open http://localhost:3007
+```
+
+### AWS Deployment
+```bash
+# Deploy CI/CD Pipeline
+aws cloudformation deploy \
+  --template-file aws/cicd-pipeline.yaml \
+  --stack-name what-if-generator-pipeline \
+  --capabilities CAPABILITY_IAM
+
+# Deploy Infrastructure
+aws cloudformation deploy \
+  --template-file aws/infrastructure.yaml \
+  --stack-name what-if-generator-prod \
+  --parameter-overrides Environment=production \
+  --capabilities CAPABILITY_IAM
+```
 
 ## Architecture
 
